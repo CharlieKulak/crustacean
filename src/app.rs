@@ -816,7 +816,12 @@ impl App {
             self.restart();
             return;
         }
-        if (self.ui.hotkey(KeyCode::P) || self.ui.hotkey(KeyCode::Escape) || self.ui.hotkey(KeyCode::Space)) && started && !over {
+        // Esc leaves the game, back to where it was started from (P or Space pause)
+        if self.ui.hotkey(KeyCode::Escape) {
+            self.leave_play();
+            return;
+        }
+        if (self.ui.hotkey(KeyCode::P) || self.ui.hotkey(KeyCode::Space)) && started && !over {
             if let Some(p) = self.play.as_mut() {
                 p.paused = !p.paused;
             }
@@ -828,7 +833,7 @@ impl App {
                 Some(r) => vec![r.category.name.clone(), r.category.desc.clone()],
                 None => vec!["Ready?".into(), catalog().mode_label(&self.settings.modes)],
             };
-            self.overlay_card(&lines[0], &lines[1], "Press an arrow key (or swipe) to start", &[]);
+            self.overlay_card(&lines[0], &lines[1], "Press an arrow key (or swipe) to start  ·  Esc to go back", &[]);
         } else if p.paused {
             if let Some(a) = self.overlay_card("Paused", "The speedrun timer only counts moves, so pausing costs nothing.", "",
                                                &["Resume", "Restart", "Quit"]) {
@@ -976,7 +981,9 @@ impl App {
         }
         let ranked = self.online.room.as_ref().is_some_and(|r| r["ranked"] != false);
         self.ui.text(if ranked { "Ranked" } else { "Unranked" }, 70.0 * u, cy, 16.0, if ranked { C_GOLD } else { MUTED }, Align::Left, true);
-        if self.ui.button_icon("", "back", Rect::new(14.0 * u, cy - 20.0 * u, 40.0 * u, 40.0 * u), Style::Ghost) {
+        if self.ui.button_icon("", "back", Rect::new(14.0 * u, cy - 20.0 * u, 40.0 * u, 40.0 * u), Style::Ghost)
+            || self.ui.hotkey(KeyCode::Escape)
+        {
             self.online.leave_match();
             self.go(Screen::Online);
             return;
