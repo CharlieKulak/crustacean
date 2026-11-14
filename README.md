@@ -28,7 +28,7 @@ cargo test --release                # checks the game matches the Python one exa
 
 On Linux, the desktop build needs the ALSA development files (`libasound2-dev` on Debian and Ubuntu).
 
-To serve the browser version from an OpenSnake server, copy `web/dist` to the server's `web-support/rs/`. The server then serves it at `/rs/`.
+To serve the browser version from an OpenSnake server, copy `web/dist` to the server's `web-support/rs/`. It becomes the site's main game at `/`, and the Python game moves to `/py/`.
 
 ## How it stays in sync with the Python game
 
