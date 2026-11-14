@@ -284,8 +284,34 @@ impl App {
                 self.set_tab(Screen::Speedrun, i);
             }
         }
-        let body = Rect::new(area.x, area.y + 60.0 * u, area.w, area.h - 60.0 * u);
+        let mut body = Rect::new(area.x, area.y + 60.0 * u, area.w, area.h - 60.0 * u);
         let mut extra = String::new();
+        // Community: search and sorting
+        if tab == 2 {
+            let mut q = self.fields.remove("comm_q").unwrap_or_default();
+            self.ui.text_input("comm_q", &mut q, Rect::new(body.x, body.y, (320.0 * u).min(body.w * 0.45), 40.0 * u),
+                               "Search by name, creator or mode", false, 40);
+            let sort = self.fields.get("comm_sort").cloned().unwrap_or_else(|| "top".into());
+            let mut x = body.x + (320.0 * u).min(body.w * 0.45) + 14.0 * u;
+            for (key, label) in [("top", "Top"), ("popular", "Most played"), ("new", "Newest")] {
+                let w = self.ui.measure(label, 13.0, true) + 30.0 * u;
+                if self.ui.chip(label, sort == key, Rect::new(x, body.y + 4.0 * u, w, 32.0 * u), ACCENT) {
+                    self.fields.insert("comm_sort", key.to_string());
+                }
+                x += w + 6.0 * u;
+            }
+            let sort = self.fields.get("comm_sort").cloned().unwrap_or_else(|| "top".into());
+            let path = format!("/api/categories?q={}&sort={}", crate::online::urlencode(q.trim()), sort);
+            // ask again whenever the search changes (once the last answer is in)
+            if path != self.online.community_path && !self.online.is_busy(&Req::Categories) {
+                self.online.community_path = path.clone();
+                self.online.get(&path, Req::Categories);
+            }
+            self.fields.insert("comm_q", q);
+            body = Rect::new(body.x, body.y + 54.0 * u, body.w, body.h - 54.0 * u);
+        }
+        // (community categories also have their votes)
+        let mut votes: Vec<Value> = Vec::new();
         let cats: Vec<(Category, Option<Value>)> = match tab {
             0 => catalog().categories.iter().map(|c| (c.clone(), self.online.records.get(&c.id).cloned())).collect(),
             1 => {
@@ -307,7 +333,10 @@ impl App {
                 extra = "Made by players: speedrun your own settings from Play, finish, and it shows up here. No rewards.".into();
                 cm["categories"].as_array().cloned().unwrap_or_default().iter().filter_map(|c| {
                     let mut cat = Category::from_server(c["id"].as_str()?, c["name"].as_str()?, "", &c["def"])?;
-                    cat.desc = format!("by {}  ·  {} players", c["creator"].as_str().unwrap_or("?"), c["players"].as_i64().unwrap_or(0));
+                    let players = c["players"].as_i64().unwrap_or(0);
+                    cat.desc = format!("by {}  ·  {} player{}  ·  {}", c["creator"].as_str().unwrap_or("?"), players,
+                                       if players == 1 { "" } else { "s" }, catalog().mode_label(&cat.modes));
+                    votes.push(c.clone());
                     Some((cat, if c["wr"].is_null() { None } else { Some(c["wr"].clone()) }))
                 }).collect()
             }
@@ -315,6 +344,7 @@ impl App {
         if !extra.is_empty() {
             self.ui.text(&self.ui.fit(&extra, 14.0, false, area.w - tw - 20.0 * u), area.x + tw + 16.0 * u, area.y + 22.0 * u, 14.0, MUTED, Align::Left, false);
         }
+        let voting = tab == 2;
         // a list of categories, and the leaderboard of the one you're looking at
         let wide = body.w > 900.0 * u;
         let list = if wide { Rect::new(body.x, body.y, body.w * 0.6 - 8.0 * u, body.h) } else { body };
@@ -331,11 +361,39 @@ impl App {
             if sel {
                 rounded_outline(r, 12.0 * u, 1.5, ACCENT);
             }
-            let name = self.ui.fit(&cat.name, 19.0, true, r.w * 0.5);
-            self.ui.text(&name, r.x + 18.0 * u, r.y + 24.0 * u, 19.0, INK, Align::Left, true);
+            // community: an upvote button on the left
+            let tx = if voting { r.x + 82.0 * u } else { r.x + 18.0 * u };
+            if voting {
+                let v = &votes[i];
+                let (count, voted, mine) = (v["votes"].as_i64().unwrap_or(0), v["voted"] == true, v["mine"] == true);
+                let vr = Rect::new(r.x + 12.0 * u, r.y + 11.0 * u, 58.0 * u, row_h - 22.0 * u);
+                let vh = self.ui.hover(vr) && !mine;
+                if vh {
+                    self.ui.hand = true;
+                }
+                let col = if voted { ACCENT } else if vh { lighten(MUTED, 0.3) } else { MUTED };
+                rounded(vr, 10.0 * u, if voted { alpha(ACCENT, 0.16) } else if vh { CARD_HI } else { alpha(BLACK, 0.18) });
+                let ax = vr.x + vr.w / 2.0;
+                let ay = vr.y + 17.0 * u;
+                draw_triangle(vec2(ax, ay - 8.0 * u), vec2(ax - 9.0 * u, ay + 5.0 * u), vec2(ax + 9.0 * u, ay + 5.0 * u), col);
+                self.ui.text(&count.to_string(), ax, vr.y + vr.h - 15.0 * u, 15.0, if voted { ACCENT } else { INK }, Align::Center, true);
+                if self.ui.pressed(vr) {
+                    if !self.online.logged_in() {
+                        self.ui.toast("Log in to upvote.", C_RED);
+                    } else if mine {
+                        self.ui.toast("That's your category: others can upvote it.", C_BLUE);
+                    } else {
+                        let id = cat.id.clone();
+                        self.online.vote(&id, !voted);
+                        self.sfx.play("click");
+                    }
+                }
+            }
+            let name = self.ui.fit(&cat.name, 19.0, true, r.w * 0.5 - (tx - r.x - 18.0 * u));
+            self.ui.text(&name, tx, r.y + 24.0 * u, 19.0, INK, Align::Left, true);
             let desc = if cat.desc.is_empty() { cat.goal_text() } else { cat.desc.clone() };
-            let desc = self.ui.fit(&desc, 13.0, false, r.w * 0.55);
-            self.ui.text(&desc, r.x + 18.0 * u, r.y + 50.0 * u, 13.0, MUTED, Align::Left, false);
+            let desc = self.ui.fit(&desc, 13.0, false, r.w * 0.55 - (tx - r.x - 18.0 * u));
+            self.ui.text(&desc, tx, r.y + 50.0 * u, 13.0, MUTED, Align::Left, false);
             let pb = self.settings.pbs.get(&cat.id).map_or("--".into(), |t| format_time(*t as f64));
             let wrt = wr.as_ref().and_then(|w| w["time_ms"].as_f64()).map_or("--".into(), format_time);
             let who = wr.as_ref().and_then(|w| w["player"].as_str()).unwrap_or("");
@@ -358,7 +416,9 @@ impl App {
             }
         }
         if cats.is_empty() {
-            self.ui.text("Nothing here yet.", list.x + list.w / 2.0, list.y + 60.0 * u, 18.0, MUTED, Align::Center, false);
+            let searching = tab == 2 && self.fields.get("comm_q").is_some_and(|q| !q.trim().is_empty());
+            let msg = if searching { "No community runs match that search." } else { "Nothing here yet." };
+            self.ui.text(msg, list.x + list.w / 2.0, list.y + 60.0 * u, 18.0, MUTED, Align::Center, false);
         }
         self.ui.end_scroll();
         if wide {

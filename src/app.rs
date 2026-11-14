@@ -188,7 +188,7 @@ impl App {
             Screen::Speedrun => {
                 o.get("/api/records", Req::Records);
                 o.get("/api/weekly", Req::Weekly);
-                o.get("/api/categories", Req::Categories);
+                o.community_path.clear(); // (fetched again, with the search, by the Community tab)
             }
             Screen::Leaderboard => o.get("/api/rankings", Req::Rankings),
             Screen::Pass if o.logged_in() => o.get("/api/battlepass", Req::Pass),
@@ -215,6 +215,10 @@ impl App {
             "speedrun" => (Screen::Speedrun, 0),
             "weekly" => (Screen::Speedrun, 1),
             "community" => (Screen::Speedrun, 2),
+            "community_search" => {
+                self.fields.insert("comm_q", "gentastic".into());
+                (Screen::Speedrun, 2)
+            }
             "online" => (Screen::Online, 0),
             "profile" => (Screen::Profile, 0),
             "friends" => (Screen::Profile, 1),

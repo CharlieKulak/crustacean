@@ -24,6 +24,7 @@ pub enum Req {
     Round,
     Weekly,
     Categories,
+    Vote(String),
     Rename,
     Rankings,
     Pass,
@@ -103,6 +104,8 @@ pub struct Online {
     pub leaderboards: HashMap<String, Value>,
     pub weekly: Option<Value>,
     pub community: Option<Value>,
+    /// The last community search asked for ("/api/categories?q=...&sort=...").
+    pub community_path: String,
     pub rankings: Option<Value>,
     pub pass: Option<Value>,
     pub market: Option<Value>,
@@ -144,6 +147,7 @@ impl Online {
             leaderboards: HashMap::new(),
             weekly: None,
             community: None,
+            community_path: String::new(),
             rankings: None,
             pass: None,
             market: None,
@@ -398,6 +402,17 @@ impl Online {
             }
             Req::Weekly => self.weekly = ok.then_some(d),
             Req::Categories => self.community = ok.then_some(d),
+            Req::Vote(id) => {
+                if ok {
+                    self.set_votes(&id, d["votes"].as_i64().unwrap_or(0), d["voted"].as_bool().unwrap_or(false));
+                } else {
+                    self.say(err, Tone::Bad);
+                    let path = self.community_path.clone();
+                    if !path.is_empty() {
+                        self.get(&path, Req::Categories); // (put the real count back)
+                    }
+                }
+            }
             Req::Rename => {
                 if ok {
                     self.say("Renamed.", Tone::Good);
@@ -535,6 +550,25 @@ impl Online {
                 let png = d["png"].as_str().map(String::from);
                 self.pictures.insert(name, png.or(Some(String::new())));
             }
+        }
+    }
+
+    /// Upvote a community category (or take it back), showing it straight away.
+    pub fn vote(&mut self, id: &str, up: bool) {
+        let votes = self.community_entry(id).and_then(|c| c["votes"].as_i64()).unwrap_or(0);
+        self.set_votes(id, (votes + if up { 1 } else { -1 }).max(0), up);
+        self.post("/api/categories/vote", json!({"id": id, "up": up}), Req::Vote(id.to_string()));
+    }
+
+    fn community_entry(&self, id: &str) -> Option<&Value> {
+        self.community.as_ref()?["categories"].as_array()?.iter().find(|c| c["id"].as_str() == Some(id))
+    }
+
+    fn set_votes(&mut self, id: &str, votes: i64, voted: bool) {
+        let Some(list) = self.community.as_mut().and_then(|c| c["categories"].as_array_mut()) else { return };
+        if let Some(c) = list.iter_mut().find(|c| c["id"].as_str() == Some(id)) {
+            c["votes"] = json!(votes);
+            c["voted"] = json!(voted);
         }
     }
 
