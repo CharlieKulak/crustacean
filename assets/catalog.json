@@ -1,0 +1,2854 @@
+{
+ "version": "2.6.0",
+ "skins": [
+  {
+   "id": "mint",
+   "name": "Mint",
+   "rarity": "common",
+   "pattern": "grad",
+   "colors": [
+    "#2fb879",
+    "#9be8c4"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 500,
+   "series": ""
+  },
+  {
+   "id": "sky",
+   "name": "Sky",
+   "rarity": "common",
+   "pattern": "grad",
+   "colors": [
+    "#3b9be0",
+    "#a9d8ff"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 500,
+   "series": ""
+  },
+  {
+   "id": "coral",
+   "name": "Coral",
+   "rarity": "common",
+   "pattern": "grad",
+   "colors": [
+    "#f0645a",
+    "#ffb3a6"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 500,
+   "series": ""
+  },
+  {
+   "id": "lavender",
+   "name": "Lavender",
+   "rarity": "common",
+   "pattern": "grad",
+   "colors": [
+    "#9a7be0",
+    "#d5c6ff"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 600,
+   "series": ""
+  },
+  {
+   "id": "sand",
+   "name": "Sand",
+   "rarity": "common",
+   "pattern": "grad",
+   "colors": [
+    "#c9a25c",
+    "#f1dcae"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 600,
+   "series": ""
+  },
+  {
+   "id": "slate",
+   "name": "Slate",
+   "rarity": "common",
+   "pattern": "grad",
+   "colors": [
+    "#55636e",
+    "#a8b5bf"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 600,
+   "series": ""
+  },
+  {
+   "id": "forest",
+   "name": "Forest",
+   "rarity": "common",
+   "pattern": "grad",
+   "colors": [
+    "#2e7d32",
+    "#81c784"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 750,
+   "series": ""
+  },
+  {
+   "id": "cherry",
+   "name": "Cherry",
+   "rarity": "common",
+   "pattern": "grad",
+   "colors": [
+    "#c2185b",
+    "#f48fb1"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 750,
+   "series": ""
+  },
+  {
+   "id": "lemon",
+   "name": "Lemon",
+   "rarity": "common",
+   "pattern": "grad",
+   "colors": [
+    "#e0b800",
+    "#fff59d"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 750,
+   "series": ""
+  },
+  {
+   "id": "ocean",
+   "name": "Ocean",
+   "rarity": "common",
+   "pattern": "grad",
+   "colors": [
+    "#0b5e8e",
+    "#4fc3c7"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 1000,
+   "series": ""
+  },
+  {
+   "id": "rust",
+   "name": "Rust",
+   "rarity": "common",
+   "pattern": "grad",
+   "colors": [
+    "#a0461f",
+    "#e0955f"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 1000,
+   "series": ""
+  },
+  {
+   "id": "bubblegum",
+   "name": "Bubblegum",
+   "rarity": "common",
+   "pattern": "grad",
+   "colors": [
+    "#ff5fa8",
+    "#ffc4e1"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 1000,
+   "series": ""
+  },
+  {
+   "id": "charcoal",
+   "name": "Charcoal",
+   "rarity": "common",
+   "pattern": "grad",
+   "colors": [
+    "#262a30",
+    "#6b7480"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 1250,
+   "series": ""
+  },
+  {
+   "id": "ice",
+   "name": "Ice",
+   "rarity": "common",
+   "pattern": "grad",
+   "colors": [
+    "#7fc8e8",
+    "#effaff"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 1500,
+   "series": ""
+  },
+  {
+   "id": "bumblebee",
+   "name": "Bumblebee",
+   "rarity": "uncommon",
+   "pattern": "stripes",
+   "colors": [
+    "#f6c400",
+    "#2a2a2a"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 2500,
+   "series": ""
+  },
+  {
+   "id": "candycane",
+   "name": "Candy Cane",
+   "rarity": "uncommon",
+   "pattern": "stripes",
+   "colors": [
+    "#e53935",
+    "#fafafa"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 2500,
+   "series": ""
+  },
+  {
+   "id": "coralsnake",
+   "name": "Coral Snake",
+   "rarity": "uncommon",
+   "pattern": "stripes",
+   "colors": [
+    "#d32f2f",
+    "#fdd835",
+    "#212121",
+    "#fdd835"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 3000,
+   "series": ""
+  },
+  {
+   "id": "tiger",
+   "name": "Tiger",
+   "rarity": "uncommon",
+   "pattern": "stripes",
+   "colors": [
+    "#f57c00",
+    "#f57c00",
+    "#1b1b1b"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 3000,
+   "series": ""
+  },
+  {
+   "id": "zebra",
+   "name": "Zebra",
+   "rarity": "uncommon",
+   "pattern": "stripes",
+   "colors": [
+    "#f5f5f5",
+    "#202020"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 3000,
+   "series": ""
+  },
+  {
+   "id": "watermelon",
+   "name": "Watermelon",
+   "rarity": "uncommon",
+   "pattern": "stripes",
+   "colors": [
+    "#2e9e3e",
+    "#86d47a"
+   ],
+   "outline": "#e8435a",
+   "glow": false,
+   "price": 3500,
+   "series": ""
+  },
+  {
+   "id": "mintchoc",
+   "name": "Mint Choc",
+   "rarity": "uncommon",
+   "pattern": "stripes",
+   "colors": [
+    "#7ee0b5",
+    "#5b3a29"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 3500,
+   "series": ""
+  },
+  {
+   "id": "siren",
+   "name": "Siren",
+   "rarity": "uncommon",
+   "pattern": "stripes",
+   "colors": [
+    "#1e5bd8",
+    "#e0262e"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 4000,
+   "series": ""
+  },
+  {
+   "id": "pumpkin",
+   "name": "Pumpkin",
+   "rarity": "uncommon",
+   "pattern": "stripes",
+   "colors": [
+    "#ff8f1f",
+    "#d96a00"
+   ],
+   "outline": "#3d6b1f",
+   "glow": false,
+   "price": 4000,
+   "series": ""
+  },
+  {
+   "id": "grapesoda",
+   "name": "Grape Soda",
+   "rarity": "uncommon",
+   "pattern": "grad",
+   "colors": [
+    "#5b2a86",
+    "#b07be8"
+   ],
+   "outline": "#2c1145",
+   "glow": false,
+   "price": 4500,
+   "series": ""
+  },
+  {
+   "id": "sunset",
+   "name": "Sunset",
+   "rarity": "uncommon",
+   "pattern": "grad",
+   "colors": [
+    "#ff7a18",
+    "#8e2de2"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 5000,
+   "series": ""
+  },
+  {
+   "id": "seafoam",
+   "name": "Seafoam",
+   "rarity": "uncommon",
+   "pattern": "grad",
+   "colors": [
+    "#11998e",
+    "#f0e6b6"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 5000,
+   "series": ""
+  },
+  {
+   "id": "gold",
+   "name": "Gold",
+   "rarity": "rare",
+   "pattern": "shimmer",
+   "colors": [
+    "#c8961e",
+    "#ffe08a"
+   ],
+   "outline": "#8a6410",
+   "glow": false,
+   "price": 10000,
+   "series": ""
+  },
+  {
+   "id": "chrome",
+   "name": "Chrome",
+   "rarity": "rare",
+   "pattern": "shimmer",
+   "colors": [
+    "#8e9aa6",
+    "#f2f6fa"
+   ],
+   "outline": "#4b5560",
+   "glow": false,
+   "price": 10000,
+   "series": ""
+  },
+  {
+   "id": "bronze",
+   "name": "Bronze",
+   "rarity": "rare",
+   "pattern": "shimmer",
+   "colors": [
+    "#8c5a2b",
+    "#e3a868"
+   ],
+   "outline": "#5a3518",
+   "glow": false,
+   "price": 10000,
+   "series": ""
+  },
+  {
+   "id": "toxic",
+   "name": "Toxic",
+   "rarity": "rare",
+   "pattern": "grad",
+   "colors": [
+    "#7cff3a",
+    "#1f6b0f"
+   ],
+   "outline": "#b6ff6e",
+   "glow": true,
+   "price": 12500,
+   "series": ""
+  },
+  {
+   "id": "frostbite",
+   "name": "Frostbite",
+   "rarity": "rare",
+   "pattern": "grad",
+   "colors": [
+    "#bff0ff",
+    "#3a8fd6"
+   ],
+   "outline": "#e6fbff",
+   "glow": true,
+   "price": 12500,
+   "series": ""
+  },
+  {
+   "id": "ember",
+   "name": "Ember",
+   "rarity": "rare",
+   "pattern": "grad",
+   "colors": [
+    "#ffd23f",
+    "#d1261b"
+   ],
+   "outline": "#ff8a00",
+   "glow": true,
+   "price": 15000,
+   "series": ""
+  },
+  {
+   "id": "neon",
+   "name": "Neon",
+   "rarity": "rare",
+   "pattern": "grad",
+   "colors": [
+    "#ff2bd6",
+    "#6a00ff"
+   ],
+   "outline": "#ff9cf0",
+   "glow": true,
+   "price": 15000,
+   "series": ""
+  },
+  {
+   "id": "midnight",
+   "name": "Midnight",
+   "rarity": "rare",
+   "pattern": "grad",
+   "colors": [
+    "#0d1b3e",
+    "#1f3a7a"
+   ],
+   "outline": "#36e0ff",
+   "glow": false,
+   "price": 17500,
+   "series": ""
+  },
+  {
+   "id": "rainbow",
+   "name": "Rainbow",
+   "rarity": "rare",
+   "pattern": "rainbow",
+   "colors": [
+    "#ff0000"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": 20000,
+   "series": ""
+  },
+  {
+   "id": "ghost",
+   "name": "Ghost",
+   "rarity": "rare",
+   "pattern": "grad",
+   "colors": [
+    "#f4f6ff",
+    "#c9cfe6"
+   ],
+   "outline": "#8a93b8",
+   "glow": false,
+   "price": 20000,
+   "series": ""
+  },
+  {
+   "id": "lavaflow",
+   "name": "Lava Flow",
+   "rarity": "epic",
+   "pattern": "flow",
+   "colors": [
+    "#ff3b00",
+    "#ff9a00",
+    "#ffe066",
+    "#b31200"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "aurora",
+   "name": "Aurora",
+   "rarity": "epic",
+   "pattern": "flow",
+   "colors": [
+    "#00e0a1",
+    "#00b3ff",
+    "#8f5bff",
+    "#00e0a1"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "galaxy",
+   "name": "Galaxy",
+   "rarity": "epic",
+   "pattern": "flow",
+   "colors": [
+    "#2a0a5e",
+    "#5b2bd9",
+    "#e64fd8",
+    "#1a1150"
+   ],
+   "outline": "#b38cff",
+   "glow": false,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "electric",
+   "name": "Electric",
+   "rarity": "epic",
+   "pattern": "pulse",
+   "colors": [
+    "#00e5ff",
+    "#fff200"
+   ],
+   "outline": "#00e5ff",
+   "glow": true,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "toxicwaste",
+   "name": "Toxic Waste",
+   "rarity": "epic",
+   "pattern": "pulse",
+   "colors": [
+    "#39ff14",
+    "#0a3d00"
+   ],
+   "outline": "#c6ff00",
+   "glow": true,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "bloodmoon",
+   "name": "Blood Moon",
+   "rarity": "epic",
+   "pattern": "pulse",
+   "colors": [
+    "#7a0010",
+    "#ff2a3d"
+   ],
+   "outline": "#3a0006",
+   "glow": true,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "cottoncandy",
+   "name": "Cotton Candy",
+   "rarity": "epic",
+   "pattern": "flow",
+   "colors": [
+    "#ff9ad5",
+    "#9ad7ff",
+    "#fff0a8",
+    "#ff9ad5"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "prismatic",
+   "name": "Prismatic",
+   "rarity": "legendary",
+   "pattern": "rainbow",
+   "colors": [
+    "#ff0000"
+   ],
+   "outline": "#ffffff",
+   "glow": true,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "inferno",
+   "name": "Inferno",
+   "rarity": "legendary",
+   "pattern": "flow",
+   "colors": [
+    "#ff2200",
+    "#ff7b00",
+    "#ffd000",
+    "#ff7b00"
+   ],
+   "outline": "#ffef80",
+   "glow": true,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "void",
+   "name": "Void",
+   "rarity": "legendary",
+   "pattern": "pulse",
+   "colors": [
+    "#050008",
+    "#2a0050"
+   ],
+   "outline": "#b026ff",
+   "glow": true,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "goldendragon",
+   "name": "Golden Dragon",
+   "rarity": "legendary",
+   "pattern": "shimmer",
+   "colors": [
+    "#b8001f",
+    "#ffcc33"
+   ],
+   "outline": "#ffe9a3",
+   "glow": true,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "northernlights",
+   "name": "Northern Lights",
+   "rarity": "legendary",
+   "pattern": "flow",
+   "colors": [
+    "#0b3d2e",
+    "#1de9b6",
+    "#7c4dff",
+    "#00b0ff"
+   ],
+   "outline": "#a7ffeb",
+   "glow": true,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "celestial",
+   "name": "Celestial",
+   "rarity": "mythic",
+   "pattern": "rainbow",
+   "colors": [
+    "#ffffff"
+   ],
+   "outline": "#ffd54f",
+   "glow": true,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "basilisk",
+   "name": "Basilisk",
+   "rarity": "mythic",
+   "pattern": "shimmer",
+   "colors": [
+    "#003d1f",
+    "#00e676"
+   ],
+   "outline": "#ffd700",
+   "glow": true,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "hermitpurple",
+   "name": "Hermit Purple",
+   "rarity": "epic",
+   "pattern": "grad",
+   "colors": [
+    "#4a1f73",
+    "#9b59d0"
+   ],
+   "outline": "#2a0f45",
+   "glow": false,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "silverchariot",
+   "name": "Silver Chariot",
+   "rarity": "epic",
+   "pattern": "shimmer",
+   "colors": [
+    "#8f9aa8",
+    "#f4f7fb"
+   ],
+   "outline": "#4d5866",
+   "glow": false,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "hierophantgreen",
+   "name": "Hierophant Green",
+   "rarity": "epic",
+   "pattern": "pulse",
+   "colors": [
+    "#14804a",
+    "#7dffb0"
+   ],
+   "outline": "#b6ffd2",
+   "glow": true,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "thehand",
+   "name": "The Hand",
+   "rarity": "epic",
+   "pattern": "stripes",
+   "colors": [
+    "#2e5cb8",
+    "#e9eef7"
+   ],
+   "outline": "#1b2f5c",
+   "glow": false,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "echoes",
+   "name": "Echoes",
+   "rarity": "epic",
+   "pattern": "stripes",
+   "colors": [
+    "#3aa865",
+    "#f29b38"
+   ],
+   "outline": "#1d5a35",
+   "glow": false,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "stickyfingers",
+   "name": "Sticky Fingers",
+   "rarity": "epic",
+   "pattern": "stripes",
+   "colors": [
+    "#2a5db0",
+    "#f2f4f8",
+    "#2a5db0",
+    "#d4a72c"
+   ],
+   "outline": "#16336b",
+   "glow": false,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "aerosmith",
+   "name": "Aerosmith",
+   "rarity": "epic",
+   "pattern": "flow",
+   "colors": [
+    "#e8702a",
+    "#f5c542",
+    "#5aa0d8",
+    "#e8702a"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "weatherreport",
+   "name": "Weather Report",
+   "rarity": "epic",
+   "pattern": "flow",
+   "colors": [
+    "#5dade2",
+    "#eaf2f8",
+    "#a9cce3",
+    "#5dade2"
+   ],
+   "outline": "#ffffff",
+   "glow": false,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "moodyblues",
+   "name": "Moody Blues",
+   "rarity": "epic",
+   "pattern": "pulse",
+   "colors": [
+    "#2f3fb8",
+    "#8e7cc3"
+   ],
+   "outline": "#1a2270",
+   "glow": false,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "goldexperience",
+   "name": "Gold Experience",
+   "rarity": "legendary",
+   "pattern": "shimmer",
+   "colors": [
+    "#e8b81e",
+    "#fff4a8"
+   ],
+   "outline": "#2e9e4f",
+   "glow": true,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "crazydiamond",
+   "name": "Crazy Diamond",
+   "rarity": "legendary",
+   "pattern": "stripes",
+   "colors": [
+    "#e88bc4",
+    "#5aa9e6"
+   ],
+   "outline": "#dde3f0",
+   "glow": true,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "killerqueen",
+   "name": "Killer Queen",
+   "rarity": "legendary",
+   "pattern": "pulse",
+   "colors": [
+    "#d07bbd",
+    "#f6d6ee"
+   ],
+   "outline": "#3a2a3a",
+   "glow": true,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "magiciansred",
+   "name": "Magician's Red",
+   "rarity": "legendary",
+   "pattern": "flow",
+   "colors": [
+    "#c0392b",
+    "#e67e22",
+    "#f1c40f",
+    "#e67e22"
+   ],
+   "outline": "#ff8a00",
+   "glow": true,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "purplehaze",
+   "name": "Purple Haze",
+   "rarity": "legendary",
+   "pattern": "pulse",
+   "colors": [
+    "#6f2da8",
+    "#a8e05f"
+   ],
+   "outline": "#d1ff8a",
+   "glow": true,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "stonefree",
+   "name": "Stone Free",
+   "rarity": "legendary",
+   "pattern": "flow",
+   "colors": [
+    "#2a7fb8",
+    "#3fbf9f",
+    "#a6e3e9",
+    "#3fbf9f"
+   ],
+   "outline": "#d6f5ff",
+   "glow": true,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "madeinheaven",
+   "name": "Made in Heaven",
+   "rarity": "legendary",
+   "pattern": "rainbow",
+   "colors": [
+    "#ffffff"
+   ],
+   "outline": "#ffffff",
+   "glow": true,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "d4c",
+   "name": "Dirty Deeds Done Dirt Cheap",
+   "rarity": "legendary",
+   "pattern": "stripes",
+   "colors": [
+    "#3a6fd8",
+    "#f2a7c3",
+    "#f5f5f5"
+   ],
+   "outline": "#f5d76e",
+   "glow": true,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "starplatinum",
+   "name": "Star Platinum",
+   "rarity": "mythic",
+   "pattern": "flow",
+   "colors": [
+    "#5b34a8",
+    "#3fb0c9",
+    "#7b4fd1",
+    "#3fb0c9"
+   ],
+   "outline": "#f2c14e",
+   "glow": true,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "theworld",
+   "name": "The World",
+   "rarity": "mythic",
+   "pattern": "shimmer",
+   "colors": [
+    "#d9a91e",
+    "#fff2a0"
+   ],
+   "outline": "#2f7a3e",
+   "glow": true,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "kingcrimson",
+   "name": "King Crimson",
+   "rarity": "mythic",
+   "pattern": "pulse",
+   "colors": [
+    "#a3122b",
+    "#efe6dc"
+   ],
+   "outline": "#ffd27a",
+   "glow": true,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "thefool",
+   "name": "The Fool",
+   "rarity": "epic",
+   "pattern": "grad",
+   "colors": [
+    "#c9a86a",
+    "#3b3b3b"
+   ],
+   "outline": "#1e1e1e",
+   "glow": false,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "heavensdoor",
+   "name": "Heaven's Door",
+   "rarity": "epic",
+   "pattern": "stripes",
+   "colors": [
+    "#fbf6ee",
+    "#f2a9c4"
+   ],
+   "outline": "#7a5c4f",
+   "glow": false,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "harvest",
+   "name": "Harvest",
+   "rarity": "epic",
+   "pattern": "stripes",
+   "colors": [
+    "#f2c230",
+    "#f28c28"
+   ],
+   "outline": "#7a4a12",
+   "glow": false,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "spicegirl",
+   "name": "Spice Girl",
+   "rarity": "epic",
+   "pattern": "stripes",
+   "colors": [
+    "#f48fb1",
+    "#ffe066"
+   ],
+   "outline": "#b0306a",
+   "glow": false,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "metallica",
+   "name": "Metallica",
+   "rarity": "epic",
+   "pattern": "shimmer",
+   "colors": [
+    "#7a1020",
+    "#c9ced6"
+   ],
+   "outline": "#3b0710",
+   "glow": false,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "whitesnake",
+   "name": "Whitesnake",
+   "rarity": "epic",
+   "pattern": "stripes",
+   "colors": [
+    "#f4f4f4",
+    "#1f1f1f",
+    "#f4f4f4",
+    "#9e9e9e"
+   ],
+   "outline": "#3a3a3a",
+   "glow": false,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "softandwet",
+   "name": "Soft & Wet",
+   "rarity": "epic",
+   "pattern": "flow",
+   "colors": [
+    "#f6f8fb",
+    "#8ec5ff",
+    "#f6f8fb",
+    "#ffd23f"
+   ],
+   "outline": "#3a7bd5",
+   "glow": false,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "horus",
+   "name": "Horus",
+   "rarity": "epic",
+   "pattern": "pulse",
+   "colors": [
+    "#9fe3ff",
+    "#e8fbff"
+   ],
+   "outline": "#4aa8d8",
+   "glow": true,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "cream",
+   "name": "Cream",
+   "rarity": "legendary",
+   "pattern": "pulse",
+   "colors": [
+    "#0b0b10",
+    "#3d1458"
+   ],
+   "outline": "#f5f5f5",
+   "glow": true,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "cmoon",
+   "name": "C-MOON",
+   "rarity": "legendary",
+   "pattern": "stripes",
+   "colors": [
+    "#3fbf5f",
+    "#f0f6f0"
+   ],
+   "outline": "#b7ff9f",
+   "glow": true,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "gratefuldead",
+   "name": "The Grateful Dead",
+   "rarity": "legendary",
+   "pattern": "pulse",
+   "colors": [
+    "#5b2a86",
+    "#7bc96f"
+   ],
+   "outline": "#d6a8ff",
+   "glow": true,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "anubis",
+   "name": "Anubis",
+   "rarity": "legendary",
+   "pattern": "shimmer",
+   "colors": [
+    "#6c4a9e",
+    "#e6e8ee"
+   ],
+   "outline": "#2b1d42",
+   "glow": true,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "ger",
+   "name": "Gold Experience Requiem",
+   "rarity": "mythic",
+   "pattern": "flow",
+   "colors": [
+    "#ffd84a",
+    "#fff8d6",
+    "#ffb300",
+    "#fff8d6"
+   ],
+   "outline": "#ffffff",
+   "glow": true,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "tuskact4",
+   "name": "Tusk Act 4",
+   "rarity": "mythic",
+   "pattern": "flow",
+   "colors": [
+    "#f48fb1",
+    "#ffd54f",
+    "#9b59d0",
+    "#ffd54f"
+   ],
+   "outline": "#fff3c4",
+   "glow": true,
+   "price": null,
+   "series": "Stand"
+  },
+  {
+   "id": "comet",
+   "name": "Comet",
+   "rarity": "epic",
+   "pattern": "flow",
+   "colors": [
+    "#1b2a6b",
+    "#6fa8ff",
+    "#ffffff",
+    "#6fa8ff"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "jellyfish",
+   "name": "Jellyfish",
+   "rarity": "epic",
+   "pattern": "pulse",
+   "colors": [
+    "#ff7ac6",
+    "#7af0ff"
+   ],
+   "outline": "#ffd1ef",
+   "glow": true,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "peacock",
+   "name": "Peacock",
+   "rarity": "epic",
+   "pattern": "flow",
+   "colors": [
+    "#0e7c86",
+    "#1f4fb5",
+    "#2fae5f",
+    "#d4a72c"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "koi",
+   "name": "Koi",
+   "rarity": "epic",
+   "pattern": "stripes",
+   "colors": [
+    "#ff7a1a",
+    "#fafafa",
+    "#ff7a1a",
+    "#1d1d1d"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "phoenix",
+   "name": "Phoenix",
+   "rarity": "legendary",
+   "pattern": "flow",
+   "colors": [
+    "#d7261e",
+    "#ff8a00",
+    "#ffd23f",
+    "#ff8a00"
+   ],
+   "outline": "#fff1a8",
+   "glow": true,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "thunderbird",
+   "name": "Thunderbird",
+   "rarity": "legendary",
+   "pattern": "pulse",
+   "colors": [
+    "#ffe600",
+    "#1e40ff"
+   ],
+   "outline": "#fff59d",
+   "glow": true,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "cyber",
+   "name": "Cyber",
+   "rarity": "legendary",
+   "pattern": "flow",
+   "colors": [
+    "#0a0f0a",
+    "#39ff14",
+    "#0a0f0a",
+    "#00e5ff"
+   ],
+   "outline": "#39ff14",
+   "glow": true,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "supernova",
+   "name": "Supernova",
+   "rarity": "mythic",
+   "pattern": "rainbow",
+   "colors": [
+    "#ffffff"
+   ],
+   "outline": "#ffffff",
+   "glow": true,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "eclipse",
+   "name": "Eclipse",
+   "rarity": "mythic",
+   "pattern": "pulse",
+   "colors": [
+    "#050505",
+    "#ffb300"
+   ],
+   "outline": "#ffe082",
+   "glow": true,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "dragonscale",
+   "name": "Dragon Scale",
+   "rarity": "mythic",
+   "pattern": "shimmer",
+   "colors": [
+    "#0b5d3b",
+    "#ffd700"
+   ],
+   "outline": "#c8ffdf",
+   "glow": true,
+   "price": null,
+   "series": ""
+  },
+  {
+   "id": "solarflare",
+   "name": "Solar Flare",
+   "rarity": "legendary",
+   "pattern": "flow",
+   "colors": [
+    "#ff6a00",
+    "#ffd000",
+    "#fff6c2",
+    "#ffd000"
+   ],
+   "outline": "#fff1a8",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "tidalwave",
+   "name": "Tidal Wave",
+   "rarity": "legendary",
+   "pattern": "flow",
+   "colors": [
+    "#0a3d7a",
+    "#1aa3c9",
+    "#e6fbff",
+    "#1aa3c9"
+   ],
+   "outline": "#bff4ff",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "venomstrike",
+   "name": "Venom Strike",
+   "rarity": "legendary",
+   "pattern": "pulse",
+   "colors": [
+    "#0c1a06",
+    "#7cff2a"
+   ],
+   "outline": "#c6ff8a",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "crystal",
+   "name": "Crystal",
+   "rarity": "legendary",
+   "pattern": "shimmer",
+   "colors": [
+    "#b9a7e8",
+    "#ffffff"
+   ],
+   "outline": "#ece6ff",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "thunderstorm",
+   "name": "Thunderstorm",
+   "rarity": "legendary",
+   "pattern": "pulse",
+   "colors": [
+    "#16204a",
+    "#ffe94d"
+   ],
+   "outline": "#fff6a0",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "champion",
+   "name": "Champion",
+   "rarity": "mythic",
+   "pattern": "shimmer",
+   "colors": [
+    "#c99a12",
+    "#fffbe6"
+   ],
+   "outline": "#ffffff",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "nebula",
+   "name": "Nebula",
+   "rarity": "mythic",
+   "pattern": "flow",
+   "colors": [
+    "#3a0f6b",
+    "#d14fd8",
+    "#3f7bff",
+    "#d14fd8"
+   ],
+   "outline": "#f0c8ff",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "hydra",
+   "name": "Hydra",
+   "rarity": "mythic",
+   "pattern": "flow",
+   "colors": [
+    "#06402f",
+    "#18b38a",
+    "#ffd23f",
+    "#18b38a"
+   ],
+   "outline": "#c8ffe9",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "oblivion",
+   "name": "Oblivion",
+   "rarity": "mythic",
+   "pattern": "pulse",
+   "colors": [
+    "#050505",
+    "#d0102a"
+   ],
+   "outline": "#ff6b7a",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "starfall",
+   "name": "Starfall",
+   "rarity": "mythic",
+   "pattern": "flow",
+   "colors": [
+    "#0b1238",
+    "#ffffff",
+    "#ffd54f",
+    "#ffffff"
+   ],
+   "outline": "#ffffff",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "borealis",
+   "name": "Borealis",
+   "rarity": "legendary",
+   "pattern": "aurora",
+   "colors": [
+    "#062a2a",
+    "#19e3a0",
+    "#4f8cff",
+    "#c86bff"
+   ],
+   "outline": "#b8ffe6",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "magma",
+   "name": "Magma",
+   "rarity": "legendary",
+   "pattern": "lava",
+   "colors": [
+    "#1a0a06",
+    "#ff4d00",
+    "#ffd84a"
+   ],
+   "outline": "#ff7a1a",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "motherboard",
+   "name": "Motherboard",
+   "rarity": "legendary",
+   "pattern": "circuit",
+   "colors": [
+    "#06210f",
+    "#11502a",
+    "#5dff9c"
+   ],
+   "outline": "#5dff9c",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "lifeline",
+   "name": "Lifeline",
+   "rarity": "legendary",
+   "pattern": "heartbeat",
+   "colors": [
+    "#2a0510",
+    "#ff2d55"
+   ],
+   "outline": "#ff8fa6",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "milkyway",
+   "name": "Milky Way",
+   "rarity": "legendary",
+   "pattern": "galaxy",
+   "colors": [
+    "#0a0a24",
+    "#3a1f6e",
+    "#ffffff"
+   ],
+   "outline": "#c8b8ff",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "spectrum",
+   "name": "Spectrum",
+   "rarity": "legendary",
+   "pattern": "prism",
+   "colors": [
+    "#ffffff"
+   ],
+   "outline": "#ffffff",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "cosmos",
+   "name": "Cosmos",
+   "rarity": "mythic",
+   "pattern": "galaxy",
+   "colors": [
+    "#05000f",
+    "#5a12a8",
+    "#ffe28a"
+   ],
+   "outline": "#ffe28a",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "eruption",
+   "name": "Eruption",
+   "rarity": "mythic",
+   "pattern": "lava",
+   "colors": [
+    "#120202",
+    "#ff1e00",
+    "#fff3b0"
+   ],
+   "outline": "#ffd84a",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "mainframe",
+   "name": "Mainframe",
+   "rarity": "mythic",
+   "pattern": "circuit",
+   "colors": [
+    "#020812",
+    "#0a2a5e",
+    "#00e5ff"
+   ],
+   "outline": "#7af6ff",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "polarnight",
+   "name": "Polar Night",
+   "rarity": "mythic",
+   "pattern": "aurora",
+   "colors": [
+    "#020612",
+    "#00ffb3",
+    "#ff3df0",
+    "#4fd2ff"
+   ],
+   "outline": "#ffffff",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "diamondheart",
+   "name": "Diamond Heart",
+   "rarity": "mythic",
+   "pattern": "heartbeat",
+   "colors": [
+    "#0a1a2e",
+    "#9ff3ff"
+   ],
+   "outline": "#ffffff",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "hypercolor",
+   "name": "Hypercolor",
+   "rarity": "mythic",
+   "pattern": "prism",
+   "colors": [
+    "#000000"
+   ],
+   "outline": "#ffd54f",
+   "glow": true,
+   "price": null,
+   "series": "Pass"
+  },
+  {
+   "id": "rk_garter",
+   "name": "Garter Stripe",
+   "rarity": "uncommon",
+   "pattern": "chevron",
+   "colors": [
+    "#3f8f2e",
+    "#a6e07a"
+   ],
+   "outline": "#1f4f14",
+   "glow": false,
+   "price": null,
+   "series": "Ranked"
+  },
+  {
+   "id": "rk_rattler",
+   "name": "Rattler",
+   "rarity": "rare",
+   "pattern": "scales",
+   "colors": [
+    "#8a5a24",
+    "#e8b870"
+   ],
+   "outline": "#4a2e0e",
+   "glow": false,
+   "price": null,
+   "series": "Ranked"
+  },
+  {
+   "id": "rk_cobra",
+   "name": "Cobra Hood",
+   "rarity": "epic",
+   "pattern": "chevron",
+   "colors": [
+    "#0d3b6e",
+    "#3cb4ff"
+   ],
+   "outline": "#bfe8ff",
+   "glow": true,
+   "price": null,
+   "series": "Ranked"
+  },
+  {
+   "id": "rk_viper",
+   "name": "Viper Strike",
+   "rarity": "epic",
+   "pattern": "spark",
+   "colors": [
+    "#2a0f4f",
+    "#9a5bff",
+    "#ffffff"
+   ],
+   "outline": "#d2b8ff",
+   "glow": true,
+   "price": null,
+   "series": "Ranked"
+  },
+  {
+   "id": "rk_python",
+   "name": "Python Crown",
+   "rarity": "legendary",
+   "pattern": "scales",
+   "colors": [
+    "#7a3a06",
+    "#ffa53a"
+   ],
+   "outline": "#ffe0a8",
+   "glow": true,
+   "price": null,
+   "series": "Ranked"
+  },
+  {
+   "id": "rk_anaconda",
+   "name": "Anaconda Fang",
+   "rarity": "legendary",
+   "pattern": "spark",
+   "colors": [
+    "#3a0208",
+    "#ff2a3d",
+    "#ffd27a"
+   ],
+   "outline": "#ff8a95",
+   "glow": true,
+   "price": null,
+   "series": "Ranked"
+  },
+  {
+   "id": "rk_basilisk",
+   "name": "Basilisk Gaze",
+   "rarity": "mythic",
+   "pattern": "chevron",
+   "colors": [
+    "#1a1400",
+    "#ffcc00"
+   ],
+   "outline": "#fff3b0",
+   "glow": true,
+   "price": null,
+   "series": "Ranked"
+  }
+ ],
+ "packs": [
+  {
+   "id": "midnight",
+   "name": "Midnight",
+   "rarity": "epic",
+   "swatch": [
+    "#1b2440",
+    "#2c3a63",
+    "#4fc3f7"
+   ],
+   "price": null
+  },
+  {
+   "id": "sakura",
+   "name": "Sakura",
+   "rarity": "epic",
+   "swatch": [
+    "#ffd6e7",
+    "#f7b6cf",
+    "#d81b60"
+   ],
+   "price": null
+  },
+  {
+   "id": "desertnight",
+   "name": "Desert Night",
+   "rarity": "epic",
+   "swatch": [
+    "#3e2f4f",
+    "#6b4f6e",
+    "#ffb74d"
+   ],
+   "price": null
+  },
+  {
+   "id": "synthwave",
+   "name": "Synthwave",
+   "rarity": "legendary",
+   "swatch": [
+    "#2b0f54",
+    "#ff2a6d",
+    "#05d9e8"
+   ],
+   "price": null
+  },
+  {
+   "id": "arctic",
+   "name": "Arctic",
+   "rarity": "legendary",
+   "swatch": [
+    "#e3f2fd",
+    "#b3e5fc",
+    "#0277bd"
+   ],
+   "price": null
+  },
+  {
+   "id": "obsidian",
+   "name": "Obsidian",
+   "rarity": "mythic",
+   "swatch": [
+    "#0a0a0f",
+    "#1d1b2e",
+    "#ffd54f"
+   ],
+   "price": null
+  },
+  {
+   "id": "lavalake",
+   "name": "Lava Lake",
+   "rarity": "epic",
+   "swatch": [
+    "#3a1410",
+    "#d84315",
+    "#ffb300"
+   ],
+   "price": null
+  },
+  {
+   "id": "deepsea",
+   "name": "Deep Sea",
+   "rarity": "epic",
+   "swatch": [
+    "#062a3d",
+    "#0b4f6c",
+    "#4dd0e1"
+   ],
+   "price": null
+  },
+  {
+   "id": "toxicswamp",
+   "name": "Toxic Swamp",
+   "rarity": "epic",
+   "swatch": [
+    "#1f2a12",
+    "#4f6b1a",
+    "#b6ff3b"
+   ],
+   "price": null
+  },
+  {
+   "id": "neongrid",
+   "name": "Neon Grid",
+   "rarity": "legendary",
+   "swatch": [
+    "#0b0b1e",
+    "#ff00c8",
+    "#00f0ff"
+   ],
+   "price": null
+  },
+  {
+   "id": "candyland",
+   "name": "Candyland",
+   "rarity": "legendary",
+   "swatch": [
+    "#ffe3f1",
+    "#c8f2ff",
+    "#ff5fa8"
+   ],
+   "price": null
+  },
+  {
+   "id": "goldenhour",
+   "name": "Golden Hour",
+   "rarity": "mythic",
+   "swatch": [
+    "#3d2a12",
+    "#e8a33d",
+    "#fff1c1"
+   ],
+   "price": null
+  },
+  {
+   "id": "meadow",
+   "name": "Meadow",
+   "rarity": "uncommon",
+   "swatch": [
+    "#cde8a0",
+    "#b8dc84",
+    "#5a8f2e"
+   ],
+   "price": 6000
+  },
+  {
+   "id": "desertsand",
+   "name": "Desert Sand",
+   "rarity": "uncommon",
+   "swatch": [
+    "#f3dfb3",
+    "#e8cf98",
+    "#b5813c"
+   ],
+   "price": 6000
+  },
+  {
+   "id": "autumn",
+   "name": "Autumn",
+   "rarity": "rare",
+   "swatch": [
+    "#f2c48a",
+    "#e8b070",
+    "#a8441c"
+   ],
+   "price": 12000
+  },
+  {
+   "id": "oceanbreeze",
+   "name": "Ocean Breeze",
+   "rarity": "rare",
+   "swatch": [
+    "#d7f0f7",
+    "#bfe6f2",
+    "#1f7a9e"
+   ],
+   "price": 12000
+  }
+ ],
+ "crates": [
+  {
+   "id": "bronze",
+   "name": "Bronze Crate",
+   "price": 2000,
+   "color": "#c4783c",
+   "odds": {
+    "common": 70,
+    "uncommon": 22,
+    "rare": 6,
+    "epic": 1.6,
+    "legendary": 0.35,
+    "mythic": 0.05
+   }
+  },
+  {
+   "id": "silver",
+   "name": "Silver Crate",
+   "price": 7500,
+   "color": "#aab4c0",
+   "odds": {
+    "common": 40,
+    "uncommon": 35,
+    "rare": 17,
+    "epic": 6,
+    "legendary": 1.7,
+    "mythic": 0.3
+   }
+  },
+  {
+   "id": "gold",
+   "name": "Gold Crate",
+   "price": 25000,
+   "color": "#e6b41e",
+   "odds": {
+    "common": 10,
+    "uncommon": 30,
+    "rare": 35,
+    "epic": 18,
+    "legendary": 6,
+    "mythic": 1
+   }
+  },
+  {
+   "id": "diamond",
+   "name": "Diamond Crate",
+   "price": 100000,
+   "color": "#50d2f0",
+   "odds": {
+    "uncommon": 10,
+    "rare": 35,
+    "epic": 35,
+    "legendary": 16,
+    "mythic": 4
+   }
+  },
+  {
+   "id": "royal",
+   "name": "Royal Crate",
+   "price": 500000,
+   "color": "#963cdc",
+   "odds": {
+    "legendary": 85,
+    "mythic": 15
+   }
+  }
+ ],
+ "rarities": [
+  {
+   "id": "common",
+   "name": "Common",
+   "color": "#b0babe"
+  },
+  {
+   "id": "uncommon",
+   "name": "Uncommon",
+   "color": "#4caf50"
+  },
+  {
+   "id": "rare",
+   "name": "Rare",
+   "color": "#2196f3"
+  },
+  {
+   "id": "epic",
+   "name": "Epic",
+   "color": "#a340d6"
+  },
+  {
+   "id": "legendary",
+   "name": "Legendary",
+   "color": "#ffb000"
+  },
+  {
+   "id": "mythic",
+   "name": "Mythic",
+   "color": "#f03c3c"
+  }
+ ],
+ "ranks": [
+  {
+   "rp": 0,
+   "name": "Hatchling",
+   "color": "#96a08c",
+   "rewards": []
+  },
+  {
+   "rp": 100,
+   "name": "Garter",
+   "color": "#68aa50",
+   "rewards": [
+    "10,000 snake points",
+    "Garter Stripe"
+   ]
+  },
+  {
+   "rp": 250,
+   "name": "Rattler",
+   "color": "#c49650",
+   "rewards": [
+    "25,000 snake points",
+    "Gold Crate",
+    "Rattler"
+   ]
+  },
+  {
+   "rp": 500,
+   "name": "Cobra",
+   "color": "#3c96dc",
+   "rewards": [
+    "50,000 snake points",
+    "Diamond Crate",
+    "Cobra Hood"
+   ]
+  },
+  {
+   "rp": 800,
+   "name": "Viper",
+   "color": "#825adc",
+   "rewards": [
+    "100,000 snake points",
+    "Diamond Crate",
+    "Viper Strike"
+   ]
+  },
+  {
+   "rp": 1200,
+   "name": "Python",
+   "color": "#e67828",
+   "rewards": [
+    "200,000 snake points",
+    "Royal Crate",
+    "Python Crown"
+   ]
+  },
+  {
+   "rp": 1700,
+   "name": "Anaconda",
+   "color": "#dc3c46",
+   "rewards": [
+    "350,000 snake points",
+    "Royal Crate",
+    "Anaconda Fang"
+   ]
+  },
+  {
+   "rp": 2300,
+   "name": "Basilisk",
+   "color": "#ffc400",
+   "rewards": [
+    "500,000 snake points",
+    "Royal Crate",
+    "Royal Crate",
+    "Basilisk Gaze"
+   ]
+  }
+ ],
+ "untradeable": [
+  "skin:rk_anaconda",
+  "skin:rk_basilisk",
+  "skin:rk_cobra",
+  "skin:rk_garter",
+  "skin:rk_python",
+  "skin:rk_rattler",
+  "skin:rk_viper"
+ ],
+ "pass_only": [
+  "skin:borealis",
+  "skin:champion",
+  "skin:cosmos",
+  "skin:crystal",
+  "skin:diamondheart",
+  "skin:eruption",
+  "skin:hydra",
+  "skin:hypercolor",
+  "skin:lifeline",
+  "skin:magma",
+  "skin:mainframe",
+  "skin:milkyway",
+  "skin:motherboard",
+  "skin:nebula",
+  "skin:oblivion",
+  "skin:polarnight",
+  "skin:solarflare",
+  "skin:spectrum",
+  "skin:starfall",
+  "skin:thunderstorm",
+  "skin:tidalwave",
+  "skin:venomstrike"
+ ],
+ "avatar_icons": [
+  "opensnake",
+  "fruit_apple",
+  "fruit_orange",
+  "fruit_cherry",
+  "fruit_grape",
+  "fruit_strawberry",
+  "fruit_lemon",
+  "fruit_banana",
+  "key",
+  "shield",
+  "trophy",
+  "skull",
+  "statue",
+  "lock",
+  "mine"
+ ],
+ "avatar_colors": [
+  "#3d6fe8",
+  "#e8701a",
+  "#28a046",
+  "#d23c32",
+  "#8a3fe0",
+  "#139a8f",
+  "#e0457b",
+  "#262a33"
+ ],
+ "modes": [
+  {
+   "id": "classic",
+   "name": "Classic",
+   "desc": "Eat fruit, grow longer, avoid the walls and yourself."
+  },
+  {
+   "id": "wall",
+   "name": "Wall",
+   "desc": "Every fruit you eat drops a new wall somewhere on the board."
+  },
+  {
+   "id": "portal",
+   "name": "Portal",
+   "desc": "Fruit comes in pairs. Eat one and you pop out of the other."
+  },
+  {
+   "id": "cheese",
+   "name": "Cheese",
+   "desc": "Your body is full of holes you can slither through."
+  },
+  {
+   "id": "borderless",
+   "name": "Borderless",
+   "desc": "Leave one side of the board, come back on the other."
+  },
+  {
+   "id": "twin",
+   "name": "Twin",
+   "desc": "Each fruit flips you around: your tail becomes your head."
+  },
+  {
+   "id": "yinyang",
+   "name": "Yin Yang",
+   "desc": "Control two mirrored snakes at once. Don't let them touch."
+  },
+  {
+   "id": "key",
+   "name": "Key",
+   "desc": "Fruit is locked. Grab its key first to open it."
+  },
+  {
+   "id": "sokoban",
+   "name": "Sokoban",
+   "desc": "Push fruit onto the targets instead of eating it."
+  },
+  {
+   "id": "poison",
+   "name": "Poison",
+   "desc": "Half the fruit is poison, and it swaps every time you eat."
+  },
+  {
+   "id": "dimension",
+   "name": "Dimension",
+   "desc": "Walls live in two dimensions. Eating flips which one is solid."
+  },
+  {
+   "id": "minesweeper",
+   "name": "Minesweeper",
+   "desc": "Hidden mines. Numbers on visited cells count nearby mines."
+  },
+  {
+   "id": "statue",
+   "name": "Statue",
+   "desc": "Eating turns your body to stone. Keep going with what's left."
+  },
+  {
+   "id": "light",
+   "name": "Light",
+   "desc": "The board is dark. Only your head lights the way."
+  },
+  {
+   "id": "shield",
+   "name": "Shield",
+   "desc": "Pick up shields that let you survive one crash."
+  },
+  {
+   "id": "arrow",
+   "name": "Arrow",
+   "desc": "Arrow tiles force you to turn the way they point."
+  },
+  {
+   "id": "magnet",
+   "name": "Magnet",
+   "desc": "Fruit near your head gets pulled toward you."
+  },
+  {
+   "id": "gate",
+   "name": "Gate",
+   "desc": "Gates open and close on a timer. Time your runs."
+  }
+ ],
+ "conflicts": [
+  [
+   "sokoban",
+   "portal"
+  ],
+  [
+   "sokoban",
+   "poison"
+  ],
+  [
+   "portal",
+   "poison"
+  ]
+ ],
+ "versus_modes": [
+  "wall",
+  "borderless",
+  "cheese",
+  "poison",
+  "portal",
+  "shield",
+  "magnet",
+  "twin",
+  "statue",
+  "key",
+  "light"
+ ],
+ "versus_sizes": {
+  "small": [
+   16,
+   12
+  ],
+  "medium": [
+   20,
+   16
+  ],
+  "large": [
+   28,
+   22
+  ]
+ },
+ "speed_ticks": [
+  [
+   0.0,
+   "Slowest",
+   260
+  ],
+  [
+   0.25,
+   "Slow",
+   170
+  ],
+  [
+   0.5,
+   "Default",
+   130
+  ],
+  [
+   0.75,
+   "Fast",
+   85
+  ],
+  [
+   1.0,
+   "Fastest",
+   45
+  ]
+ ],
+ "snake_colors": {
+  "blue": [
+   "#3d6fe8",
+   "#7aa2ff",
+   "Blue"
+  ],
+  "purple": [
+   "#8a3fe0",
+   "#c19bff",
+   "Purple"
+  ],
+  "orange": [
+   "#e8701a",
+   "#ffb36b",
+   "Orange"
+  ],
+  "pink": [
+   "#e0457b",
+   "#ff9ec0",
+   "Pink"
+  ],
+  "teal": [
+   "#139a8f",
+   "#6fe0d4",
+   "Teal"
+  ],
+  "black": [
+   "#262a33",
+   "#6b7280",
+   "Black"
+  ]
+ },
+ "categories": [
+  {
+   "id": "sprint10",
+   "name": "Sprint 10",
+   "w": 10,
+   "h": 9,
+   "modes": [],
+   "goal": 10,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Eat 10 apples on a 10 x 9 board.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "sprint25",
+   "name": "Sprint 25",
+   "w": 10,
+   "h": 9,
+   "modes": [],
+   "goal": 25,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Eat 25 apples on a 10 x 9 board.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "rush",
+   "name": "Sprint 30",
+   "w": 17,
+   "h": 15,
+   "modes": [],
+   "goal": 30,
+   "fruit_count": 5,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "5 apples at a time on a big board. Eat 30.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "sprint50",
+   "name": "Sprint 50",
+   "w": 12,
+   "h": 11,
+   "modes": [],
+   "goal": 50,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Eat 50 apples on a 12 x 11 board.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "marathon",
+   "name": "Marathon",
+   "w": 17,
+   "h": 15,
+   "modes": [],
+   "goal": 100,
+   "fruit_count": 3,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "3 apples at a time on a big board. Eat 100.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "blitz",
+   "name": "Blitz",
+   "w": 10,
+   "h": 9,
+   "modes": [],
+   "goal": 15,
+   "fruit_count": 1,
+   "tick_ms": 45.0,
+   "fruit": "apple",
+   "desc": "Top speed from the first move. Eat 15.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "accelerate",
+   "name": "Accelerate",
+   "w": 10,
+   "h": 9,
+   "modes": [],
+   "goal": 30,
+   "fruit_count": 1,
+   "tick_ms": 170.0,
+   "fruit": "apple",
+   "desc": "Starts slow, gets faster with every apple. Eat 30.",
+   "accel": 4,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "fullboard",
+   "name": "Full Board",
+   "w": 8,
+   "h": 5,
+   "modes": [],
+   "goal": null,
+   "fruit_count": 1,
+   "tick_ms": 110.0,
+   "fruit": "apple",
+   "desc": "Fill every cell of an 8 x 5 board.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "portal",
+   "name": "Portal Dash",
+   "w": 12,
+   "h": 11,
+   "modes": [
+    "portal"
+   ],
+   "goal": 15,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Portal mode: eat 15 and ride the portals.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "walls",
+   "name": "Wall Gauntlet",
+   "w": 10,
+   "h": 9,
+   "modes": [
+    "wall"
+   ],
+   "goal": 20,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Wall mode: every apple adds a wall. Eat 20.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "keys",
+   "name": "Key Hunt",
+   "w": 12,
+   "h": 11,
+   "modes": [
+    "key"
+   ],
+   "goal": 10,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Key mode: grab each key, then its apple. Eat 10.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "twin",
+   "name": "Twin Turns",
+   "w": 10,
+   "h": 9,
+   "modes": [
+    "twin"
+   ],
+   "goal": 15,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Twin mode: you flip around after every apple. Eat 15.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "minefield",
+   "name": "Minefield",
+   "w": 12,
+   "h": 11,
+   "modes": [
+    "minesweeper"
+   ],
+   "goal": 15,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Minesweeper mode: avoid the hidden mines. Eat 15.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "turbo",
+   "name": "Turbo",
+   "w": 12,
+   "h": 11,
+   "modes": [],
+   "goal": 40,
+   "fruit_count": 1,
+   "tick_ms": 150.0,
+   "fruit": "apple",
+   "desc": "Accelerate, but harder: faster sooner, down to top speed. Eat 40.",
+   "accel": 5,
+   "min_tick_ms": 40
+  },
+  {
+   "id": "wrap",
+   "name": "Wrap Run",
+   "w": 12,
+   "h": 11,
+   "modes": [
+    "borderless"
+   ],
+   "goal": 20,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Borderless mode: leave one side, come back on the other. Eat 20.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "poison",
+   "name": "Poison Path",
+   "w": 12,
+   "h": 11,
+   "modes": [
+    "poison"
+   ],
+   "goal": 15,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Poison mode: half the fruit is poison and it swaps. Eat 15.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "gates",
+   "name": "Gate Runner",
+   "w": 12,
+   "h": 11,
+   "modes": [
+    "gate"
+   ],
+   "goal": 15,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Gate mode: time your runs through the gates. Eat 15.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "lightsout",
+   "name": "Lights Out",
+   "w": 12,
+   "h": 11,
+   "modes": [
+    "light"
+   ],
+   "goal": 15,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Light mode: only your head lights the way. Eat 15.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "dimension",
+   "name": "Dimension Drift",
+   "w": 12,
+   "h": 11,
+   "modes": [
+    "dimension"
+   ],
+   "goal": 15,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Dimension mode: eating flips which walls are solid. Eat 15.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "swiss",
+   "name": "Swiss Sprint",
+   "w": 10,
+   "h": 9,
+   "modes": [
+    "cheese"
+   ],
+   "goal": 20,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Cheese mode: slither through the holes in your body. Eat 20.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "statues",
+   "name": "Statue Garden",
+   "w": 12,
+   "h": 11,
+   "modes": [
+    "statue"
+   ],
+   "goal": 15,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Statue mode: eating turns your body to stone. Eat 15.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "snail",
+   "name": "Snail Pace",
+   "w": 10,
+   "h": 9,
+   "modes": [],
+   "goal": 20,
+   "fruit_count": 1,
+   "tick_ms": 260.0,
+   "fruit": "apple",
+   "desc": "The slowest speed: plan every move. Eat 20.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "bigboard",
+   "name": "Big Board",
+   "w": 30,
+   "h": 20,
+   "modes": [],
+   "goal": 20,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "One apple at a time on a 30 x 20 board. Eat 20.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "fruitsalad",
+   "name": "Fruit Salad",
+   "w": 14,
+   "h": 12,
+   "modes": [],
+   "goal": 40,
+   "fruit_count": 5,
+   "tick_ms": 130.0,
+   "fruit": "mixed",
+   "desc": "Mixed fruit, 5 at a time. Eat 40.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "shields",
+   "name": "Shield Rush",
+   "w": 12,
+   "h": 11,
+   "modes": [
+    "shield"
+   ],
+   "goal": 15,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Shield mode: grab shields to survive a crash. Eat 15.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "arrows",
+   "name": "Arrow Maze",
+   "w": 12,
+   "h": 11,
+   "modes": [
+    "arrow"
+   ],
+   "goal": 15,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Arrow mode: arrow tiles turn you. Eat 15.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "magnet",
+   "name": "Magnet Pull",
+   "w": 12,
+   "h": 11,
+   "modes": [
+    "magnet"
+   ],
+   "goal": 25,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Magnet mode: nearby fruit flies to you. Eat 25.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "yinyang",
+   "name": "Yin Yang",
+   "w": 12,
+   "h": 11,
+   "modes": [
+    "yinyang"
+   ],
+   "goal": 10,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Steer two mirrored snakes at once. Eat 10.",
+   "accel": 0,
+   "min_tick_ms": 45
+  },
+  {
+   "id": "chaos",
+   "name": "Chaos",
+   "w": 14,
+   "h": 12,
+   "modes": [
+    "arrow",
+    "gate",
+    "wall"
+   ],
+   "goal": 15,
+   "fruit_count": 1,
+   "tick_ms": 130.0,
+   "fruit": "apple",
+   "desc": "Wall, Gate and Arrow modes at once. Eat 15.",
+   "accel": 0,
+   "min_tick_ms": 45
+  }
+ ],
+ "economy": {
+  "round_base": 25,
+  "round_per_fruit": 10,
+  "round_cap": 2000,
+  "pr_reward": 10000,
+  "wr_reward": 100000,
+  "wr_hold_reward": 100000,
+  "pass_price": 10000,
+  "level_xp": 1200,
+  "pass_levels": 100,
+  "market_fee": 0.05,
+  "market_min": 100,
+  "market_max": 10000000,
+  "daily_bonus": 20000
+ }
+}

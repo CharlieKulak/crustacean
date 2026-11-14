@@ -1,0 +1,81 @@
+name: build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: sudo apt-get update && sudo apt-get install -y libasound2-dev libx11-dev libxi-dev libgl1-mesa-dev
+      - run: cargo test --release
+
+  desktop:
+    needs: test
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            file: opensnake
+            name: opensnake-linux
+          - os: windows-latest
+            file: opensnake.exe
+            name: opensnake-windows
+          - os: macos-latest
+            file: opensnake
+            name: opensnake-macos
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libasound2-dev libx11-dev libxi-dev libgl1-mesa-dev
+      - run: cargo build --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}
+          path: target/release/${{ matrix.file }}
+
+  web:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - run: ./web/build-web.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: opensnake-web
+          path: web/dist
+
+  # A version tag (v2.6.0) attaches the games to that GitHub release.
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [desktop, web]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Package
+        run: |
+          cd dist
+          chmod +x opensnake-linux/opensnake opensnake-macos/opensnake
+          tar czf opensnake-linux-x86_64.tar.gz -C opensnake-linux opensnake
+          tar czf opensnake-macos.tar.gz -C opensnake-macos opensnake
+          (cd opensnake-windows && zip -q ../opensnake-windows.zip opensnake.exe)
+          (cd opensnake-web && zip -qr ../opensnake-web.zip .)
+      - name: Upload to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 ||
+            gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "OpenSnake (Rust) ${GITHUB_REF_NAME#v}" --notes ""
+          gh release upload "$GITHUB_REF_NAME" dist/*.tar.gz dist/*.zip --repo "$GITHUB_REPOSITORY" --clobber
