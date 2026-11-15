@@ -1,6 +1,6 @@
 [package]
 name = "opensnake"
-version = "2.6.2"
+version = "2.6.3"
 edition = "2024"
 description = "OpenSnake: a snake game inspired by Google Snake, in Rust"
 license = "BSD-3-Clause"
