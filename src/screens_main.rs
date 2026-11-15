@@ -155,117 +155,159 @@ impl App {
         let area = self.page("Play", "play");
         let u = self.ui.u;
         let wide = area.w > 860.0 * u;
-        let left = if wide { Rect::new(area.x, area.y, area.w * 0.58 - 8.0 * u, area.h) } else { area };
-        let off = self.ui.begin_scroll("setup", left, 760.0 * u);
-        let mut y = left.y - off;
+        let gap = 16.0 * u;
+        let left = if wide { Rect::new(area.x, area.y, area.w * 0.6 - gap / 2.0, area.h) } else { area };
+        let content_h = 230.0 * u + 70.0 * u + catalog().modes.len().div_ceil(3) as f32 * 44.0 * u + 60.0 * u;
+        let off = self.ui.begin_scroll("setup", left, content_h + if wide { 0.0 } else { 200.0 * u });
         let x = left.x;
-        let w = left.w;
-        // board size
-        self.ui.text("Board", x, y + 14.0 * u, 20.0, INK, Align::Left, true);
-        y += 34.0 * u;
-        let sizes = [("Small", 10, 9), ("Medium", 17, 15), ("Large", 24, 21), ("Huge", 34, 28)];
-        let bw = (w - 3.0 * 10.0 * u) / 4.0;
-        for (i, (name, bw_, bh)) in sizes.iter().enumerate() {
-            let on = self.settings.board_w == *bw_ && self.settings.board_h == *bh;
-            if self.ui.chip(&format!("{name}  {bw_}x{bh}"), on, Rect::new(x + i as f32 * (bw + 10.0 * u), y, bw, 40.0 * u), ACCENT) {
-                self.settings.board_w = *bw_;
-                self.settings.board_h = *bh;
-            }
-        }
-        y += 62.0 * u;
-        // speed
-        self.ui.text("Speed", x, y + 14.0 * u, 20.0, INK, Align::Left, true);
-        self.ui.text(speed_label(self.settings.speed), x + w, y + 14.0 * u, 16.0, ACCENT, Align::Right, true);
-        y += 34.0 * u;
-        let s = self.ui.slider("speed", self.settings.speed, Rect::new(x + 8.0 * u, y, w - 16.0 * u, 30.0 * u));
-        self.settings.speed = (s * 4.0).round() / 4.0;
-        y += 50.0 * u;
+        let w = left.w - 10.0 * u;
+        let mut y = left.y - off;
+
+        // -- the board: size, fruit and speed
+        let card = Rect::new(x, y, w, 214.0 * u);
+        self.ui.card(card);
+        let lx = card.x + 22.0 * u;
+        let label_w = 120.0 * u;
+        let row = |i: f32| card.y + 22.0 * u + i * 62.0 * u;
+        // size: width x height
+        self.ui.text("Board size", lx, row(0.0) + 22.0 * u, 17.0, INK, Align::Left, true);
+        let sw = ((card.w - label_w - 70.0 * u) / 2.0).min(190.0 * u);
+        let sx = lx + label_w;
+        self.settings.board_w = self.ui.stepper("board_w", self.settings.board_w, 8, 1000, Rect::new(sx, row(0.0), sw, 44.0 * u));
+        self.ui.text("x", sx + sw + 14.0 * u, row(0.0) + 22.0 * u, 18.0, MUTED, Align::Center, true);
+        self.settings.board_h = self.ui.stepper("board_h", self.settings.board_h, 5, 1000, Rect::new(sx + sw + 28.0 * u, row(0.0), sw, 44.0 * u));
         // fruit
-        self.ui.text("Fruit at once", x, y + 14.0 * u, 20.0, INK, Align::Left, true);
-        y += 34.0 * u;
-        for (i, n) in [1, 3, 5, 10].iter().enumerate() {
-            if self.ui.chip(&n.to_string(), self.settings.fruit_count == *n, Rect::new(x + i as f32 * 70.0 * u, y, 60.0 * u, 38.0 * u), ACCENT) {
-                self.settings.fruit_count = *n;
-            }
-        }
+        self.ui.text("Fruit at once", lx, row(1.0) + 22.0 * u, 17.0, INK, Align::Left, true);
+        // up to the whole board (less the snake); past 100,000 a board takes too long to fill
+        let max_fruit = (self.settings.board_w * self.settings.board_h - 4).clamp(1, 100_000);
+        self.settings.fruit_count = self.ui.stepper("fruit", self.settings.fruit_count.min(max_fruit), 1, max_fruit,
+                                                    Rect::new(sx, row(1.0), sw, 44.0 * u));
         let mixed = self.settings.fruit == "mixed";
-        if self.ui.chip("Mixed fruit", mixed, Rect::new(x + 290.0 * u, y, 140.0 * u, 38.0 * u), rgb(245, 158, 11)) {
+        if self.ui.toggle("Mixed fruit", mixed, Rect::new(sx + sw + 28.0 * u, row(1.0) + 2.0 * u, sw, 40.0 * u)) {
             self.settings.fruit = if mixed { "apple".into() } else { "mixed".into() };
         }
-        y += 60.0 * u;
-        // modes
-        self.ui.text("Modes", x, y + 14.0 * u, 20.0, INK, Align::Left, true);
-        self.ui.text("Mix as many as you like", x + 80.0 * u, y + 15.0 * u, 14.0, MUTED, Align::Left, false);
-        y += 34.0 * u;
+        // speed
+        self.ui.text("Speed", lx, row(2.0) + 20.0 * u, 17.0, INK, Align::Left, true);
+        let slider = Rect::new(sx + 8.0 * u, row(2.0) + 6.0 * u, sw * 2.0 + 28.0 * u - 100.0 * u, 30.0 * u);
+        let sp = self.ui.slider("speed", self.settings.speed, slider);
+        self.settings.speed = (sp * 4.0).round() / 4.0;
+        self.ui.text(speed_label(self.settings.speed), sx + sw * 2.0 + 28.0 * u, row(2.0) + 20.0 * u, 15.0, ACCENT, Align::Right, true);
+        y += card.h + gap;
+
+        // -- modes
         let modes: Vec<_> = catalog().modes.iter().filter(|m| m.id != "classic").cloned().collect();
-        let cols = if w > 600.0 * u { 4 } else { 3 };
-        let mw = (w - (cols as f32 - 1.0) * 8.0 * u) / cols as f32;
+        let cols = if w > 560.0 * u { 4 } else { 3 };
+        let rows = modes.len().div_ceil(cols);
+        let mcard = Rect::new(x, y, w, 64.0 * u + rows as f32 * 44.0 * u + 40.0 * u);
+        self.ui.card(mcard);
+        self.ui.text("Modes", mcard.x + 22.0 * u, mcard.y + 28.0 * u, 17.0, INK, Align::Left, true);
+        let on = self.settings.modes.len();
+        let note = if on == 0 { "None: classic snake".to_string() } else { format!("{on} on") };
+        self.ui.text(&note, mcard.x + 90.0 * u, mcard.y + 29.0 * u, 13.0, MUTED, Align::Left, false);
+        if on > 0 && self.ui.button("Clear", Rect::new(mcard.x + mcard.w - 92.0 * u, mcard.y + 12.0 * u, 74.0 * u, 32.0 * u), Style::Ghost) {
+            self.settings.modes.clear();
+        }
+        let inner_w = mcard.w - 44.0 * u;
+        let mw = (inner_w - (cols as f32 - 1.0) * 8.0 * u) / cols as f32;
+        let mut hovered = None;
         for (i, m) in modes.iter().enumerate() {
-            let r = Rect::new(x + (i % cols) as f32 * (mw + 8.0 * u), y + (i / cols) as f32 * 46.0 * u, mw, 38.0 * u);
-            let on = self.settings.modes.contains(&m.id);
-            if self.ui.chip(&m.name, on, r, C_BLUE) {
+            let r = Rect::new(mcard.x + 22.0 * u + (i % cols) as f32 * (mw + 8.0 * u), mcard.y + 54.0 * u + (i / cols) as f32 * 44.0 * u, mw, 36.0 * u);
+            let active = self.settings.modes.contains(&m.id);
+            if self.ui.chip(&m.name, active, r, C_BLUE) {
                 toggle_mode(&mut self.settings.modes, &m.id);
             }
             if self.ui.hover(r) {
-                self.selected = Some(m.id.clone());
+                hovered = Some(m.desc.clone());
             }
         }
-        y += (modes.len().div_ceil(cols)) as f32 * 46.0 * u + 10.0 * u;
-        let desc = self.selected.as_ref().and_then(|id| catalog().modes.iter().find(|m| m.id == *id)).map(|m| m.desc.clone())
-            .unwrap_or_else(|| "Point at a mode to see what it does.".into());
-        self.ui.text(&desc, x, y + 10.0 * u, 15.0, MUTED, Align::Left, false);
+        let desc = hovered.unwrap_or_else(|| "Point at a mode to see what it does. Mix as many as you like.".into());
+        let desc = self.ui.fit(&desc, 13.0, false, inner_w);
+        self.ui.text(&desc, mcard.x + 22.0 * u, mcard.y + mcard.h - 22.0 * u, 13.0, MUTED, Align::Left, false);
+        y += mcard.h + gap;
         self.ui.end_scroll();
 
-        // the right side: a summary and the start button
-        let side = if wide { Rect::new(area.x + area.w * 0.58 + 8.0 * u, area.y, area.w * 0.42 - 8.0 * u, 300.0 * u) } else {
-            Rect::new(area.x, area.y + area.h - 76.0 * u, area.w, 76.0 * u)
+        // -- the summary and Start
+        let side = if wide {
+            Rect::new(area.x + area.w * 0.6 + gap / 2.0, area.y, area.w * 0.4 - gap / 2.0, 330.0 * u)
+        } else {
+            Rect::new(area.x, area.y + area.h - 150.0 * u, area.w, 150.0 * u)
         };
+        let _ = y;
+        self.ui.card(side);
+        let cx = side.x + side.w / 2.0;
+        let label = self.ui.fit(&catalog().mode_label(&self.settings.modes), 22.0, true, side.w - 40.0 * u);
+        let mut sy = side.y + 36.0 * u;
         if wide {
-            self.ui.card(side);
-            let cx = side.x + side.w / 2.0;
-            self.ui.text(&catalog().mode_label(&self.settings.modes), cx, side.y + 40.0 * u, 22.0, INK, Align::Center, true);
-            self.ui.text(&format!("{} x {} board  ·  {}  ·  {} fruit", self.settings.board_w, self.settings.board_h,
+            self.ui.text(&label, cx, sy, 22.0, INK, Align::Center, true);
+            sy += 30.0 * u;
+            let fruit = if self.settings.fruit == "mixed" { "mixed fruit" } else { "fruit" };
+            self.ui.text(&format!("{} x {} board  ·  {}  ·  {} {fruit}", self.settings.board_w, self.settings.board_h,
                                   speed_label(self.settings.speed), self.settings.fruit_count),
-                         cx, side.y + 72.0 * u, 15.0, MUTED, Align::Center, false);
+                         cx, sy, 14.0, MUTED, Align::Center, false);
+            sy += 40.0 * u;
             let key = format!("{}x{} {} {}", self.settings.board_w, self.settings.board_h,
                               catalog().mode_label(&self.settings.modes), self.settings.fruit_count);
             let best = *self.settings.best.get(&key).unwrap_or(&0);
-            draw_icon("trophy", cx - 50.0 * u, side.y + 118.0 * u, 26.0 * u, C_GOLD);
-            self.ui.text(&format!("Best {best}"), cx - 30.0 * u, side.y + 118.0 * u, 20.0, C_GOLD, Align::Left, true);
+            draw_icon("trophy", cx - 46.0 * u, sy, 24.0 * u, C_GOLD);
+            self.ui.text(&format!("Best {best}"), cx - 28.0 * u, sy, 19.0, C_GOLD, Align::Left, true);
+            sy += 30.0 * u;
             let v3 = self.settings.view3d;
-            if self.ui.toggle("3D view (fixed camera)", v3, Rect::new(side.x + 24.0 * u, side.y + 150.0 * u, side.w - 48.0 * u, 40.0 * u)) {
+            if self.ui.toggle("3D view", v3, Rect::new(side.x + 24.0 * u, sy, side.w - 48.0 * u, 40.0 * u)) {
                 self.settings.view3d = !v3;
             }
-            // these settings as a speedrun: a community category once someone finishes it
-            let sr = Rect::new(side.x, side.y + side.h + 16.0 * u, side.w, 150.0 * u);
-            self.ui.card(sr);
-            self.ui.text("Speedrun these settings", sr.x + 24.0 * u, sr.y + 30.0 * u, 18.0, INK, Align::Left, true);
-            self.ui.text("Finish it and it's shared in Speedrun > Community.", sr.x + 24.0 * u, sr.y + 54.0 * u, 13.0, MUTED, Align::Left, false);
-            let goals = [(10, "Eat 10"), (20, "Eat 20"), (30, "Eat 30"), (0, "Fill it")];
-            let gw = (sr.w - 48.0 * u - 18.0 * u) / 4.0;
-            let goal: i32 = self.fields.get("sr_goal").and_then(|g| g.parse().ok()).unwrap_or(20);
-            for (i, (g, l)) in goals.iter().enumerate() {
-                if self.ui.chip(l, goal == *g, Rect::new(sr.x + 24.0 * u + i as f32 * (gw + 6.0 * u), sr.y + 72.0 * u, gw, 30.0 * u), C_BLUE) {
-                    self.fields.insert("sr_goal", g.to_string());
-                }
-            }
-            if self.ui.button_icon("Start the run", "timer", Rect::new(sr.x + 24.0 * u, sr.y + 108.0 * u, sr.w - 48.0 * u, 34.0 * u), Style::Secondary) {
-                let s = &self.settings;
-                let cat = Category::custom(s.board_w, s.board_h, &s.modes, Some(goal), s.fruit_count,
-                                           crate::settings::speed_ms(s.speed), &s.fruit, "");
-                self.settings.save();
-                self.start_run(cat, Screen::Setup);
-            }
-            if self.ui.button_icon("Start", "play", Rect::new(side.x + 24.0 * u, side.y + 214.0 * u, side.w - 48.0 * u, 62.0 * u), Style::Primary)
-                || self.ui.hotkey(KeyCode::Enter)
-            {
-                self.settings.save();
-                self.start_round();
-            }
-        } else if self.ui.button_icon("Start", "play", side, Style::Primary) || self.ui.hotkey(KeyCode::Enter) {
+            sy += 56.0 * u;
+        }
+        let start = Rect::new(side.x + 20.0 * u, if wide { sy } else { side.y + 16.0 * u }, side.w - 40.0 * u, 60.0 * u);
+        if self.ui.button_icon("Start", "play", start, Style::Primary) || self.ui.hotkey(KeyCode::Enter) {
             self.settings.save();
             self.start_round();
+            return;
         }
+        let srb = Rect::new(side.x + 20.0 * u, start.y + start.h + 10.0 * u, side.w - 40.0 * u, 40.0 * u);
+        if self.ui.button_icon("Speedrun these settings", "timer", srb, Style::Ghost) {
+            self.fields.insert("sr_popup", "1".into());
+        }
+        if self.fields.contains_key("sr_popup") {
+            self.speedrun_settings_popup();
+        }
+    }
+
+    /// Speedrun the current settings: pick a goal. Finishing it shares it in Community.
+    fn speedrun_settings_popup(&mut self) {
+        let u = self.ui.u;
+        let (w, h) = (self.ui.w, self.ui.h);
+        self.ui.input = true;
+        draw_rectangle(0.0, 0.0, w, h, alpha(rgb(4, 8, 12), 0.7));
+        let r = Rect::new(w / 2.0 - 220.0 * u, h / 2.0 - 140.0 * u, 440.0 * u, 280.0 * u);
+        self.ui.card(r);
+        self.ui.text("Speedrun these settings", r.x + r.w / 2.0, r.y + 40.0 * u, 22.0, INK, Align::Center, true);
+        self.ui.text("Finish it and it's shared in Speedrun > Community.", r.x + r.w / 2.0, r.y + 70.0 * u, 13.0, MUTED, Align::Center, false);
+        self.ui.text("Goal", r.x + 30.0 * u, r.y + 118.0 * u, 16.0, INK, Align::Left, true);
+        let goal: i32 = self.fields.get("sr_goal").and_then(|g| g.parse().ok()).unwrap_or(20);
+        let fill = goal == 0;
+        let g = self.ui.stepper("sr_goal", if fill { 20 } else { goal }, 1, 999, Rect::new(r.x + 100.0 * u, r.y + 96.0 * u, 160.0 * u, 44.0 * u));
+        if !fill {
+            self.fields.insert("sr_goal", g.to_string());
+        }
+        self.ui.text("fruit", r.x + 270.0 * u, r.y + 118.0 * u, 15.0, MUTED, Align::Left, false);
+        if self.ui.toggle("Fill the board instead", fill, Rect::new(r.x + 30.0 * u, r.y + 152.0 * u, r.w - 60.0 * u, 36.0 * u)) {
+            self.fields.insert("sr_goal", if fill { "20".into() } else { "0".into() });
+        }
+        let bw = (r.w - 72.0 * u) / 2.0;
+        if self.ui.button("Cancel", Rect::new(r.x + 30.0 * u, r.y + r.h - 70.0 * u, bw, 48.0 * u), Style::Secondary)
+            || self.ui.hotkey(KeyCode::Escape)
+        {
+            self.fields.remove("sr_popup");
+        } else if self.ui.button_icon("Start the run", "timer", Rect::new(r.x + 42.0 * u + bw, r.y + r.h - 70.0 * u, bw, 48.0 * u), Style::Primary) {
+            self.fields.remove("sr_popup");
+            let goal: i32 = self.fields.get("sr_goal").and_then(|g| g.parse().ok()).unwrap_or(20);
+            let s = &self.settings;
+            let cat = Category::custom(s.board_w, s.board_h, &s.modes, Some(goal), s.fruit_count,
+                                       crate::settings::speed_ms(s.speed), &s.fruit, "");
+            self.settings.save();
+            self.start_run(cat, Screen::Setup);
+        }
+        self.ui.input = false;
     }
 
     // ---- speedruns

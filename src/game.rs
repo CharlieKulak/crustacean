@@ -210,6 +210,9 @@ pub struct Game {
 
     pub walls: IndexMap<Cell, Wall>,
     pub apples: Vec<Apple>,
+    /// How many fruit are on each cell (a quick lookup; the list above is the real thing).
+    /// Code outside this file that changes `apples` calls `reindex_apples` after.
+    pub apple_cells: HashMap<Cell, u32>,
     pub items: Vec<Item>,
     pub targets: Vec<Cell>,
     pub mines: HashSet<Cell>,
@@ -254,6 +257,7 @@ impl Game {
             dim: 0,
             walls: IndexMap::new(),
             apples: Vec::new(),
+            apple_cells: HashMap::new(),
             items: Vec::new(),
             targets: Vec::new(),
             mines: HashSet::new(),
@@ -291,6 +295,7 @@ impl Game {
         self.dim = 0;
         self.walls.clear();
         self.apples.clear();
+        self.apple_cells.clear();
         self.items.clear();
         self.targets.clear();
         self.mines.clear();
@@ -395,7 +400,40 @@ impl Game {
     }
 
     pub fn apple_at(&self, x: i32, y: i32) -> Option<usize> {
+        if !self.apple_cells.contains_key(&(x, y)) {
+            return None; // (nothing there: no need to look through every fruit)
+        }
         self.apples.iter().position(|a| a.x == x && a.y == y)
+    }
+
+    fn index_add(&mut self, c: Cell) {
+        *self.apple_cells.entry(c).or_insert(0) += 1;
+    }
+
+    fn index_remove(&mut self, c: Cell) {
+        if let Some(n) = self.apple_cells.get_mut(&c) {
+            *n -= 1;
+            if *n == 0 {
+                self.apple_cells.remove(&c);
+            }
+        }
+    }
+
+    fn move_apple(&mut self, i: usize, x: i32, y: i32) {
+        let (ox, oy) = (self.apples[i].x, self.apples[i].y);
+        self.index_remove((ox, oy));
+        self.apples[i].x = x;
+        self.apples[i].y = y;
+        self.index_add((x, y));
+    }
+
+    /// Rebuild the fruit lookup after changing `apples` directly.
+    pub fn reindex_apples(&mut self) {
+        self.apple_cells.clear();
+        for i in 0..self.apples.len() {
+            let c = (self.apples[i].x, self.apples[i].y);
+            self.index_add(c);
+        }
     }
 
     pub fn item_at(&self, x: i32, y: i32) -> Option<usize> {
@@ -475,13 +513,13 @@ impl Game {
                 taken.insert((p.x, p.y));
             }
         }
-        taken.extend(self.apples.iter().map(|a| (a.x, a.y)));
         taken.extend(self.items.iter().map(|it| (it.x, it.y)));
         taken.extend(self.gates.iter().map(|g| (g.x, g.y)));
         taken.extend(self.targets.iter().copied());
         let free = |g: &Game, x: i32, y: i32| {
             let k = (x, y);
-            !taken.contains(&k) && !g.walls.contains_key(&k) && !g.mines.contains(&k) && !g.arrows.contains_key(&k)
+            !taken.contains(&k) && !g.apple_cells.contains_key(&k) && !g.walls.contains_key(&k) && !g.mines.contains(&k)
+                && !g.arrows.contains_key(&k)
         };
         for _ in 0..200 {
             let x = self.rng.randrange(self.w as usize) as i32;
@@ -587,6 +625,7 @@ impl Game {
             None => self.pick_fruit(),
         };
         self.apples.push(Apple { x, y, fruit, group, poison, locked: false });
+        self.index_add((x, y));
         self.apples.len() - 1
     }
 
@@ -615,7 +654,9 @@ impl Game {
             let far = move |g: &Game, x: i32, y: i32| g.head_dist(x, y) >= 2 && (x - a.0).abs() + (y - a.1).abs() >= 4;
             let b = self.random_free(&|g, x, y| far(g, x, y) && g.escapable(x, y)).or_else(|| self.random_free(&far));
             let Some(b) = b else {
-                self.apples.pop();
+                if let Some(a) = self.apples.pop() {
+                    self.index_remove((a.x, a.y));
+                }
                 return false;
             };
             let fruit = self.apples[apple].fruit.clone();
@@ -639,21 +680,25 @@ impl Game {
     }
 
     pub fn fill_apples(&mut self) {
-        let good_groups = |g: &Game| g.apples.iter().filter(|a| !a.poison).map(|a| a.group).collect::<HashSet<_>>().len();
+        // (counted once, then kept up to date: each new group is one more, so lots of fruit stays quick)
+        let mut good = self.apples.iter().filter(|a| !a.poison).map(|a| a.group).collect::<HashSet<_>>().len() as i32;
         let mut guard = 0;
         let mut limit = self.apple_count * 4 + 50; // stops when the board has no room left
-        while (good_groups(self) as i32) < self.apple_count && guard < limit {
+        while good < self.apple_count && guard < limit {
             guard += 1;
             if !self.spawn_group() {
                 break;
             }
+            good += 1;
         }
         if self.has("poison") {
             limit += self.apple_count * 2;
-            while (self.apples.iter().filter(|a| a.poison).count() as i32) < self.apple_count && guard < limit {
+            let mut poison = self.apples.iter().filter(|a| a.poison).count() as i32;
+            while poison < self.apple_count && guard < limit {
                 guard += 1;
                 let Some(p) = self.random_free(&|g, x, y| g.head_dist(x, y) >= 2) else { break };
                 self.add_apple(p.0, p.1, None, None, true);
+                poison += 1;
             }
         }
         if !self.apples.iter().any(|a| !a.poison) {
@@ -821,8 +866,7 @@ impl Game {
                     if blocked {
                         return self.collide(i, "push");
                     }
-                    self.apples[b].x = px;
-                    self.apples[b].y = py;
+                    self.move_apple(b, px, py);
                     self.events.push(Event::at("push", px, py));
                 }
             }
@@ -934,6 +978,7 @@ impl Game {
 
     fn eat(&mut self, i: usize, a: usize) {
         let apple = self.apples.remove(a);
+        self.index_remove((apple.x, apple.y));
         if apple.poison {
             self.events.push(Event::fruit("poison", apple.x, apple.y, &apple.fruit));
             self.collide(i, "poison");
@@ -943,6 +988,7 @@ impl Game {
         if self.has("portal") {
             if let Some(p) = self.apples.iter().position(|b| b.group == apple.group) {
                 let partner = self.apples.remove(p);
+                self.index_remove((partner.x, partner.y));
                 self.snakes[i].body[0] = Seg::new(partner.x, partner.y);
                 self.revealed.insert((partner.x, partner.y));
                 self.events.push(Event::at("portal", partner.x, partner.y));
@@ -1019,7 +1065,8 @@ impl Game {
             if let Some(t) = self.targets.iter().position(|&c| c == (a.x, a.y)) {
                 self.targets.remove(t);
                 if let Some(idx) = self.apples.iter().position(|b| *b == a) {
-                    self.apples.remove(idx);
+                    let gone = self.apples.remove(idx);
+                    self.index_remove((gone.x, gone.y));
                 }
                 self.events.push(Event::fruit("eat", a.x, a.y, &a.fruit));
                 self.scored(0);
@@ -1033,7 +1080,8 @@ impl Game {
         for a in snapshot {
             if (a.x == 0 || a.x == self.w - 1) && (a.y == 0 || a.y == self.h - 1) {
                 if let Some(idx) = self.apples.iter().position(|b| *b == a) {
-                    self.apples.remove(idx);
+                    let gone = self.apples.remove(idx);
+                    self.index_remove((gone.x, gone.y));
                     if !self.targets.is_empty() {
                         self.targets.remove(0);
                     }
@@ -1077,14 +1125,12 @@ impl Game {
                     if self.has("sokoban") {
                         continue;
                     }
-                    self.apples[ai].x = tx;
-                    self.apples[ai].y = ty;
+                    self.move_apple(ai, tx, ty);
                     self.eat(si, ai);
                     return; // apple list changed
                 }
                 if self.is_free(tx, ty) {
-                    self.apples[ai].x = tx;
-                    self.apples[ai].y = ty;
+                    self.move_apple(ai, tx, ty);
                     break;
                 }
             }

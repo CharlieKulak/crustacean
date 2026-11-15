@@ -115,6 +115,9 @@ pub struct Ui {
     pub hand: bool,
     pub caret_at: f64,
     warmed_u: f32,
+    /// number boxes being typed in, and when their +/- buttons were pressed
+    edits: HashMap<u64, String>,
+    held: HashMap<u64, f64>,
 }
 
 impl Ui {
@@ -144,6 +147,8 @@ impl Ui {
             hand: false,
             caret_at: 0.0,
             warmed_u: 1.0,
+            edits: HashMap::new(),
+            held: HashMap::new(),
         }
     }
 
@@ -557,6 +562,105 @@ impl Ui {
         entered
     }
 
+    /// A number box: - and + buttons (hold to keep going) around the number, which can
+    /// also be clicked and typed. Returns the new value, kept between min and max.
+    pub fn stepper(&mut self, key: &str, value: i32, min: i32, max: i32, r: Rect) -> i32 {
+        let id = id_of(&("stepper", key));
+        let u = self.u;
+        let bw = r.h;
+        rounded(r, 10.0 * u, rgb(14, 21, 30));
+        rounded_outline(r, 10.0 * u, 1.0, LINE);
+        let mut v = value;
+        // the buttons
+        for (k, (label, delta)) in [("-", -1), ("+", 1)].into_iter().enumerate() {
+            let br = Rect::new(if k == 0 { r.x } else { r.x + r.w - bw }, r.y, bw, r.h);
+            let bid = id ^ (k as u64 + 1) * 7919;
+            let hover = self.hover(br);
+            let at_end = (delta < 0 && v <= min) || (delta > 0 && v >= max);
+            if hover && !at_end {
+                self.hand = true;
+            }
+            let h = self.anim(bid, if hover && !at_end { 1.0 } else { 0.0 }, 18.0);
+            let inner = Rect::new(br.x + 4.0 * u, br.y + 4.0 * u, br.w - 8.0 * u, br.h - 8.0 * u);
+            rounded(inner, 8.0 * u, mix(CARD_HI, lighten(CARD_HI, 0.15), h));
+            let col = if at_end { FAINT } else { INK };
+            let cx = inner.x + inner.w / 2.0;
+            let cy = inner.y + inner.h / 2.0;
+            let arm = inner.h * 0.22;
+            draw_line(cx - arm, cy, cx + arm, cy, 2.5 * u, col);
+            if label == "+" {
+                draw_line(cx, cy - arm, cx, cy + arm, 2.5 * u, col);
+            }
+            // a click steps once; holding it down keeps stepping, faster after a while
+            if self.input && hover && self.clicked && !at_end {
+                self.clicked = false;
+                v += delta;
+                self.held.insert(bid, self.time);
+            } else if let Some(&since) = self.held.get(&bid) {
+                if self.down && hover && !at_end {
+                    let t = self.time - since;
+                    if t > 0.4 {
+                        let rate = if t > 2.0 { 0.02 } else { 0.06 };
+                        let steps = ((t - 0.4) / rate) as i64 - ((t - 0.4 - self.dt as f64) / rate).max(0.0) as i64;
+                        // (the longer it's held, the bigger the jumps, for big numbers)
+                        let jump = if t > 7.0 { 500 } else if t > 5.0 { 50 } else if t > 3.5 { 5 } else { 1 };
+                        v = v.saturating_add(delta * steps.max(0) as i32 * jump);
+                    }
+                } else {
+                    self.held.remove(&bid);
+                }
+            }
+        }
+        // the number: click it to type one
+        let mid = Rect::new(r.x + bw, r.y, r.w - 2.0 * bw, r.h);
+        let size = (r.h / u * 0.44).clamp(12.0, 22.0);
+        let typing = self.focus == Some(id);
+        if self.input && self.clicked && self.hover(mid) && !typing {
+            self.clicked = false;
+            self.focus = Some(id);
+            self.edits.insert(id, String::new());
+            self.caret_at = self.time;
+        }
+        if self.focus == Some(id) {
+            let clicked_away = self.input && self.clicked && !self.hover(mid);
+            let buf = self.edits.entry(id).or_default();
+            for c in self.chars.clone() {
+                if c.is_ascii_digit() && buf.len() < 7 {
+                    buf.push(c);
+                }
+            }
+            if self.keys.contains(&KeyCode::Backspace) {
+                buf.pop();
+            }
+            let done = self.keys.contains(&KeyCode::Enter) || self.keys.contains(&KeyCode::KpEnter)
+                || self.keys.contains(&KeyCode::Tab) || self.keys.contains(&KeyCode::Escape)
+                || clicked_away;
+            let shown = buf.clone();
+            rounded_outline(r, 10.0 * u, 2.0, ACCENT);
+            let w = self.text(if shown.is_empty() { "" } else { &shown }, mid.x + mid.w / 2.0, mid.y + mid.h / 2.0, size, INK, Align::Center, true);
+            if ((self.time - self.caret_at) * 2.0) as i64 % 2 == 0 {
+                let cx = mid.x + mid.w / 2.0 + w / 2.0 + 2.0;
+                draw_rectangle(cx, mid.y + mid.h * 0.25, 2.0, mid.h * 0.5, ACCENT);
+            }
+            if done {
+                if let Ok(n) = shown.parse::<i32>() {
+                    if !self.keys.contains(&KeyCode::Escape) {
+                        v = n;
+                    }
+                }
+                self.focus = None;
+                self.edits.remove(&id);
+            }
+        } else {
+            let hover = self.hover(mid);
+            if hover {
+                self.hand = true;
+            }
+            self.text(&value.to_string(), mid.x + mid.w / 2.0, mid.y + mid.h / 2.0, size, if hover { WHITE } else { INK }, Align::Center, true);
+        }
+        v.clamp(min, max)
+    }
+
     // ---- scrolling
 
     /// Starts a clipped, scrollable area. Returns the scroll offset (pixels) to subtract
@@ -684,7 +788,8 @@ fn intersect(a: Rect, b: Rect) -> Rect {
     Rect::new(x, y, (r - x).max(0.0), (bt - y).max(0.0))
 }
 
-fn set_clip(r: Option<Rect>) {
+/// Only draw inside `r` (None: everywhere). Flushes what's been drawn so far.
+pub fn set_clip(r: Option<Rect>) {
     let mut gl = unsafe { get_internal_gl() };
     gl.flush();
     match r {

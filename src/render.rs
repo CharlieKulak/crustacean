@@ -137,9 +137,39 @@ pub fn snake_points(g: &Game, idx: usize, t: f32) -> Vec<Vec2> {
         .collect()
 }
 
+/// The smallest a cell is drawn: bigger boards scroll with the snake instead of shrinking.
+pub const MIN_CELL: f32 = 32.0;
+
+/// Which snake the view follows on boards too big to show whole.
+pub fn focus_snake(v: &View) -> usize {
+    v.you.unwrap_or(0).min(v.game.snakes.len().saturating_sub(1))
+}
+
 pub fn draw_board(v: &View, area: Rect, fx: &Effects) -> (Rect, f32) {
     let g = v.game;
-    let (mut r, c) = board_rect(g, area);
+    let (mut r, mut c) = board_rect(g, area);
+    // Too big to show whole at a readable size: keep cells big and follow the snake.
+    let min_cell = MIN_CELL * (area.h / 700.0).clamp(0.7, 1.6);
+    let scrolling = c < min_cell && !g.snakes.is_empty();
+    if scrolling {
+        c = min_cell.floor();
+        let head = snake_points(g, focus_snake(v), v.t).first().copied().unwrap_or(vec2(0.0, 0.0));
+        let (bw, bh) = (g.w as f32 * c, g.h as f32 * c);
+        let follow = |len: f32, avail: f32, start: f32, at: f32| {
+            if len <= avail {
+                start + (avail - len) / 2.0 // (fits this way: centre it)
+            } else {
+                (start + avail / 2.0 - (at + 0.5) * c).clamp(start + avail - len, start)
+            }
+        };
+        r = Rect::new(follow(bw, area.w, area.x, head.x), follow(bh, area.h, area.y, head.y), bw, bh);
+        crate::ui::set_clip(Some(area));
+    }
+    // the cells that are on screen
+    let x0 = (((area.x - r.x) / c).floor().max(0.0) as i32).min(g.w);
+    let y0 = (((area.y - r.y) / c).floor().max(0.0) as i32).min(g.h);
+    let x1 = (((area.x + area.w - r.x) / c).ceil() as i32 + 1).clamp(0, g.w);
+    let y1 = (((area.y + area.h - r.y) / c).ceil() as i32 + 1).clamp(0, g.h);
     if fx.shake > 0.0 {
         r.x += rand::gen_range(-1.0, 1.0) * fx.shake * c;
         r.y += rand::gen_range(-1.0, 1.0) * fx.shake * c;
@@ -149,8 +179,8 @@ pub fn draw_board(v: &View, area: Rect, fx: &Effects) -> (Rect, f32) {
     rounded(Rect::new(r.x - pad, r.y - pad + 4.0, r.w + pad * 2.0, r.h + pad * 2.0), pad * 1.5, alpha(BLACK, 0.3));
     rounded(Rect::new(r.x - pad, r.y - pad, r.w + pad * 2.0, r.h + pad * 2.0), pad * 1.5, v.colors.border);
     // checkerboard
-    for y in 0..g.h {
-        for x in 0..g.w {
+    for y in y0..y1 {
+        for x in x0..x1 {
             let col = if (x + y) % 2 == 0 { v.colors.light } else { v.colors.dark };
             draw_rectangle(r.x + x as f32 * c, r.y + y as f32 * c, c + 0.5, c + 0.5, col);
         }
@@ -186,6 +216,10 @@ pub fn draw_board(v: &View, area: Rect, fx: &Effects) -> (Rect, f32) {
     }
     // walls and statues
     for w in g.walls.values() {
+        let (x, y) = (w.x, w.y);
+        if x < x0 - 1 || x > x1 || y < y0 - 1 || y > y1 {
+            continue; // (off screen on a big board)
+        }
         let p = at(w.x as f32, w.y as f32);
         let active = g.wall_active(w);
         if w.kind == "statue" {
@@ -236,6 +270,10 @@ pub fn draw_board(v: &View, area: Rect, fx: &Effects) -> (Rect, f32) {
     }
     // items
     for it in &g.items {
+        let (x, y) = (it.x, it.y);
+        if x < x0 - 1 || x > x1 || y < y0 - 1 || y > y1 {
+            continue; // (off screen on a big board)
+        }
         let bob = ((time * 3.0 + it.x as f64) as f32).sin() * c * 0.04;
         let p = at(it.x as f32 + 0.5, it.y as f32 + 0.5) + vec2(0.0, bob);
         if it.kind == "key" {
@@ -247,6 +285,10 @@ pub fn draw_board(v: &View, area: Rect, fx: &Effects) -> (Rect, f32) {
     }
     // fruit
     for a in &g.apples {
+        let (x, y) = (a.x, a.y);
+        if x < x0 - 1 || x > x1 || y < y0 - 1 || y > y1 {
+            continue; // (off screen on a big board)
+        }
         let p = at(a.x as f32 + 0.5, a.y as f32 + 0.5);
         let pulse = 1.0 + 0.04 * ((time * 4.0 + a.x as f64 * 0.7) as f32).sin();
         if g.has("portal") {
@@ -290,8 +332,8 @@ pub fn draw_board(v: &View, area: Rect, fx: &Effects) -> (Rect, f32) {
     // light mode: dark except near the heads
     if g.has("light") && !g.over {
         let heads: Vec<Vec2> = (0..g.snakes.len()).filter(|&i| !g.snakes[i].dead).map(|i| snake_points(g, i, v.t)[0]).collect();
-        for y in 0..g.h {
-            for x in 0..g.w {
+        for y in y0..y1 {
+            for x in x0..x1 {
                 let d = heads.iter().map(|h| (vec2(x as f32, y as f32) - *h).length()).fold(f32::MAX, f32::min);
                 let dark = ((d - 1.6) / 1.6).clamp(0.0, 0.94);
                 if dark > 0.0 {
@@ -305,6 +347,9 @@ pub fn draw_board(v: &View, area: Rect, fx: &Effects) -> (Rect, f32) {
         let k = 1.0 - p.life / p.max;
         let pos = at(p.pos.x, p.pos.y);
         draw_circle(pos.x, pos.y, p.size * c * k + 0.5, alpha(p.color, k));
+    }
+    if scrolling {
+        crate::ui::set_clip(None);
     }
     (r, c)
 }

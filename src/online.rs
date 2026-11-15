@@ -864,6 +864,7 @@ pub fn apply_state(g: &mut Game, st: &Value) {
                 .collect()
         })
         .unwrap_or_default();
+    g.reindex_apples();
     g.walls = st["walls"]
         .as_array()
         .map(|a| {

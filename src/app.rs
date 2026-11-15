@@ -284,6 +284,34 @@ impl App {
                 self.frozen = true;
                 return;
             }
+            "full" | "full3d" => {
+                // a big board packed with as much fruit as it holds
+                self.settings.view3d = name == "full3d";
+                self.settings.modes = vec![];
+                (self.settings.board_w, self.settings.board_h) = (300, 300);
+                self.settings.fruit_count = 300 * 300 - 4;
+                self.start_round();
+                for d in [Dir::Up, Dir::Right] {
+                    if let Some(p) = self.play.as_mut() {
+                        p.game_mut().input(d);
+                    }
+                }
+                return;
+            }
+            "big" | "big3d" | "huge" => {
+                // a board too big to show whole: the view follows the snake
+                self.settings.view3d = name == "big3d";
+                self.settings.modes = vec!["wall".into()];
+                (self.settings.board_w, self.settings.board_h) = if name == "huge" { (1000, 1000) } else { (200, 150) };
+                self.settings.fruit_count = 40;
+                self.start_round();
+                for d in [Dir::Up, Dir::Right] {
+                    if let Some(p) = self.play.as_mut() {
+                        p.game_mut().input(d);
+                    }
+                }
+                return;
+            }
             "run" => {
                 let cat = catalog().categories[0].clone();
                 self.start_run(cat, Screen::Speedrun);

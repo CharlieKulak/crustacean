@@ -41,8 +41,11 @@ impl Batch {
         self.idx = Vec::with_capacity(90000);
     }
 
+    /// Start a new batch if `n` more vertices (and their triangles) might not fit:
+    /// macroquad draws at most 60,000 vertices and 90,000 indices at a time and
+    /// drops the rest.
     fn room(&mut self, n: usize) {
-        if self.verts.len() + n > 64000 {
+        if self.verts.len() + n > 58_000 || self.idx.len() + n * 6 > 88_000 {
             self.flush();
         }
     }
@@ -175,10 +178,21 @@ impl Batch {
     }
 }
 
-pub fn camera_for(w: i32, h: i32, area: Rect) -> Camera3D {
+/// Boards bigger than this (in cells) are shown a part at a time, following the snake.
+pub const VIEW_CELLS: f32 = 32.0;
+
+pub fn camera_for(w: i32, h: i32, area: Rect, focus: Option<Vec2>) -> Camera3D {
     let (fw, fh) = (w as f32, h as f32);
-    let size = fw.max(fh * 1.25);
-    let target = vec3(fw / 2.0, 0.0, fh / 2.0 + fh * 0.04);
+    let (size, target) = match focus {
+        // a big board: look at the part round the snake, keeping the board's edges in view
+        Some(f) => {
+            let half = VIEW_CELLS / 2.0;
+            let tx = if fw <= VIEW_CELLS { fw / 2.0 } else { (f.x + 0.5).clamp(half, fw - half) };
+            let tz = if fh <= VIEW_CELLS / 1.25 { fh / 2.0 } else { (f.y + 0.5).clamp(half / 1.25, fh - half / 1.25) };
+            (VIEW_CELLS, vec3(tx, 0.0, tz + VIEW_CELLS * 0.03))
+        }
+        None => (fw.max(fh * 1.25), vec3(fw / 2.0, 0.0, fh / 2.0 + fh * 0.04)),
+    };
     let aspect = area.w / area.h;
     // back far enough that the whole board fits, whatever the window's shape
     let dist = size * 1.08 / aspect.min(1.6).max(0.55) + 2.5;
@@ -208,7 +222,18 @@ pub fn to_screen(cam: &Camera3D, area: Rect, p: Vec3) -> Option<Vec2> {
 
 pub fn draw_board3d(v: &View, area: Rect, fx: &Effects) {
     let g = v.game;
-    let cam = camera_for(g.w, g.h, area);
+    let big = (g.w as f32).max(g.h as f32 * 1.25) > VIEW_CELLS && !g.snakes.is_empty();
+    let focus = big.then(|| snake_points(g, crate::render::focus_snake(v), v.t).first().copied().unwrap_or(vec2(0.0, 0.0)));
+    let cam = camera_for(g.w, g.h, area, focus);
+    // (on big boards, only the floor near the view is drawn)
+    let (vx0, vx1, vy0, vy1) = match focus {
+        Some(_) => {
+            let t = cam.target;
+            let reach = VIEW_CELLS as i32;
+            (((t.x as i32) - reach).max(0), ((t.x as i32) + reach).min(g.w), ((t.z as i32) - reach).max(0), ((t.z as i32) + reach / 2).min(g.h))
+        }
+        None => (0, g.w, 0, g.h),
+    };
     set_camera(&cam);
     let mut b = Batch::new();
     let time = v.now_ms / 1000.0;
@@ -233,8 +258,8 @@ pub fn draw_board3d(v: &View, area: Rect, fx: &Effects) {
     let (fw, fh) = (g.w as f32, g.h as f32);
     // (its top sits just under the tiles, so the two never fight over the same depth)
     b.cuboid(vec3(fw / 2.0, -0.37, fh / 2.0), vec3(fw + 0.6, 0.7, fh + 0.6), colors.border);
-    for y in 0..g.h {
-        for x in 0..g.w {
+    for y in vy0..vy1 {
+        for x in vx0..vx1 {
             let c = if (x + y) % 2 == 0 { colors.light } else { colors.dark };
             let k = lit(x as f32, y as f32);
             let (x0, z0) = (x as f32, y as f32);
@@ -248,6 +273,10 @@ pub fn draw_board3d(v: &View, area: Rect, fx: &Effects) {
         }
     }
     for a in &g.apples {
+        let (x, y) = (a.x, a.y);
+        if x < vx0 - 1 || x > vx1 || y < vy0 - 1 || y > vy1 {
+            continue; // (out of view on a big board)
+        }
         b.shadow(a.x as f32 + 0.55, a.y as f32 + 0.6, 0.38, 0.22);
     }
     let center = |x: i32, y: i32, hgt: f32| vec3(x as f32 + 0.5, hgt, y as f32 + 0.5);
@@ -280,6 +309,10 @@ pub fn draw_board3d(v: &View, area: Rect, fx: &Effects) {
     }
     // walls, statues, gates
     for w in g.walls.values() {
+        let (x, y) = (w.x, w.y);
+        if x < vx0 - 1 || x > vx1 || y < vy0 - 1 || y > vy1 {
+            continue; // (out of view on a big board)
+        }
         if w.kind == "statue" {
             b.cuboid(center(w.x, w.y, 0.35), vec3(0.8, 0.7, 0.8), rgb(150, 150, 160));
             b.sphere(center(w.x, w.y, 0.8), 0.3, rgb(170, 170, 180), 6);
@@ -317,6 +350,10 @@ pub fn draw_board3d(v: &View, area: Rect, fx: &Effects) {
     }
     // items and fruit, bobbing
     for it in &g.items {
+        let (x, y) = (it.x, it.y);
+        if x < vx0 - 1 || x > vx1 || y < vy0 - 1 || y > vy1 {
+            continue; // (out of view on a big board)
+        }
         let bob = 0.45 + 0.08 * ((time * 3.0 + it.x as f64) as f32).sin();
         let c = center(it.x, it.y, bob);
         if it.kind == "key" {
@@ -330,6 +367,10 @@ pub fn draw_board3d(v: &View, area: Rect, fx: &Effects) {
         }
     }
     for a in &g.apples {
+        let (x, y) = (a.x, a.y);
+        if x < vx0 - 1 || x > vx1 || y < vy0 - 1 || y > vy1 {
+            continue; // (out of view on a big board)
+        }
         let bob = 0.38 + 0.06 * ((time * 3.5 + a.x as f64 * 0.7) as f32).sin();
         let c = center(a.x, a.y, bob);
         if g.has("portal") {
