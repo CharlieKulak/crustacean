@@ -775,7 +775,7 @@ pub fn warm_fonts(fonts: &[&Font], u: f32) {
             f.populate_font_cache(&chars, px);
         }
     }
-    if std::env::var("OPENSNAKE_DEBUG").is_ok() {
+    if std::env::var("CRUSTACEAN_DEBUG").is_ok() {
         eprintln!("warmed fonts in {:.0} ms", (get_time() - t0) * 1000.0);
     }
 }

@@ -1,4 +1,4 @@
 # The browser build's functions come from JavaScript (macroquad's loader and
-# web/opensnake-net.js), so the linker mustn't expect to find them in Rust.
+# web/crustacean-net.js), so the linker mustn't expect to find them in Rust.
 [target.wasm32-unknown-unknown]
 rustflags = ["-C", "link-arg=--allow-undefined"]

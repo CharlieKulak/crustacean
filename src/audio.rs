@@ -194,7 +194,7 @@ mod pulse {
             let lib = match unsafe { Library::new("libpulse-simple.so.0") } {
                 Ok(l) => l,
                 Err(e) => {
-                    if std::env::var("OPENSNAKE_DEBUG").is_ok() {
+                    if std::env::var("CRUSTACEAN_DEBUG").is_ok() {
                         eprintln!("no PulseAudio sound: {e}");
                     }
                     return None;
@@ -207,11 +207,11 @@ mod pulse {
             let handle = unsafe {
                 let new: Symbol<New> = lib.get(b"pa_simple_new\0").ok()?;
                 let mut err = 0;
-                new(std::ptr::null(), c"OpenSnake".as_ptr(), 1, std::ptr::null(), c"Sound effects".as_ptr(), &spec,
+                new(std::ptr::null(), c"Crustacean".as_ptr(), 1, std::ptr::null(), c"Sound effects".as_ptr(), &spec,
                     std::ptr::null(), &attr, &mut err)
             };
             if handle.is_null() {
-                if std::env::var("OPENSNAKE_DEBUG").is_ok() {
+                if std::env::var("CRUSTACEAN_DEBUG").is_ok() {
                     eprintln!("no PulseAudio sound: pa_simple_new failed");
                 }
                 return None;
@@ -254,7 +254,7 @@ mod pulse {
                     }
                 }
             });
-            if std::env::var("OPENSNAKE_DEBUG").is_ok() {
+            if std::env::var("CRUSTACEAN_DEBUG").is_ok() {
                 eprintln!("sound: PulseAudio");
             }
             Some(Pulse { tx, names })

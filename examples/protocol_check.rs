@@ -1,8 +1,8 @@
 //! Plays an online match between two clients against a local server and checks the
 //! replies (no window): `cargo run --example protocol_check -- http://127.0.0.1:8765 TOKEN_A TOKEN_B`.
 
-use opensnake::game::Dir;
-use opensnake::online::{Notice, Online, Req};
+use crustacean::game::Dir;
+use crustacean::online::{Notice, Online, Req};
 use serde_json::json;
 use std::time::{Duration, Instant};
 
@@ -15,7 +15,7 @@ fn pump(clients: &mut [&mut Online], t0: Instant, ms: u64) -> Vec<Vec<Notice>> {
     let mut out = vec![Vec::new(); clients.len()];
     while Instant::now() < end {
         // (one process, two players: both see every event and keep their own)
-        let events: Vec<_> = opensnake::net::poll().into_iter().collect();
+        let events: Vec<_> = crustacean::net::poll().into_iter().collect();
         for (i, c) in clients.iter_mut().enumerate() {
             c.handle(&events, now(t0));
             out[i].extend(c.notices.drain(..));

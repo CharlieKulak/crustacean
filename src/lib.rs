@@ -1,4 +1,4 @@
-//! OpenSnake in Rust: the game logic (shared with the tests) and the game itself.
+//! Crustacean: an OpenSnake client in Rust. The game logic (shared with the tests) and the game itself.
 
 pub mod app;
 pub mod audio;

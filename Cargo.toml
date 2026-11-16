@@ -1,16 +1,16 @@
 [package]
-name = "opensnake"
-version = "2.6.3"
+name = "crustacean"
+version = "3.0.0"
 edition = "2024"
-description = "OpenSnake: a snake game inspired by Google Snake, in Rust"
-license = "BSD-3-Clause"
+description = "Crustacean: a snake game in Rust, and a client for OpenSnake servers"
+license = "GPL-3.0-or-later"
 
 [[bin]]
-name = "opensnake"
+name = "crustacean"
 path = "src/main.rs"
 
 [lib]
-name = "opensnake"
+name = "crustacean"
 path = "src/lib.rs"
 
 [dependencies]

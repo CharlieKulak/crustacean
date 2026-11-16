@@ -1,11 +1,11 @@
-//! OpenSnake: a snake game inspired by Google Snake.
+//! Crustacean: a snake game, and a client for OpenSnake servers.
 
 use macroquad::prelude::*;
-use opensnake::app::App;
+use crustacean::app::App;
 
 fn conf() -> macroquad::conf::Conf {
     let window = Conf {
-        window_title: "OpenSnake".into(),
+        window_title: "Crustacean".into(),
         window_width: 1280,
         window_height: 760,
         high_dpi: true,

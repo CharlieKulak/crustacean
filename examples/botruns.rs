@@ -1,9 +1,9 @@
 //! Plays speedruns with a simple bot and writes the run files, to check them with
 //! the Python game: `cargo run --release --example botruns -- out.json [count]`.
 
-use opensnake::game::{DIRS, Dir};
-use opensnake::pyrandom::PyRandom;
-use opensnake::speedrun::{Category, Run};
+use crustacean::game::{DIRS, Dir};
+use crustacean::pyrandom::PyRandom;
+use crustacean::speedrun::{Category, Run};
 use serde_json::Value;
 
 fn main() {

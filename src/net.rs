@@ -179,14 +179,25 @@ mod platform {
     }
 
     fn settings_path() -> Option<std::path::PathBuf> {
-        if let Ok(dir) = std::env::var("OPENSNAKE_CONFIG_DIR") {
-            return Some(std::path::PathBuf::from(dir).join("opensnake-rs.json"));
+        if let Ok(dir) = std::env::var("CRUSTACEAN_CONFIG_DIR") {
+            return Some(std::path::PathBuf::from(dir).join("crustacean.json"));
         }
+        directories::ProjectDirs::from("", "", "crustacean").map(|d| d.config_dir().join("crustacean.json"))
+    }
+
+    /// Where the settings were kept before Crustacean had its name.
+    fn old_settings_path() -> Option<std::path::PathBuf> {
         directories::ProjectDirs::from("", "", "opensnake").map(|d| d.config_dir().join("opensnake-rs.json"))
     }
 
     pub fn storage_get() -> Option<String> {
-        std::fs::read_to_string(settings_path()?).ok()
+        let path = settings_path()?;
+        match std::fs::read_to_string(&path) {
+            Ok(s) => Some(s),
+            // the first time: bring over the old settings (your login, pack, bests...)
+            Err(_) if std::env::var("CRUSTACEAN_CONFIG_DIR").is_err() => std::fs::read_to_string(old_settings_path()?).ok(),
+            Err(_) => None,
+        }
     }
 
     pub fn storage_set(value: &str) {
@@ -223,7 +234,7 @@ mod platform {
 
 #[cfg(target_arch = "wasm32")]
 mod platform {
-    //! In the browser: see web/opensnake-net.js for the other half.
+    //! In the browser: see web/crustacean-net.js for the other half.
     use super::NetEvent;
     use std::collections::VecDeque;
 
@@ -246,7 +257,7 @@ mod platform {
 
     /// (miniquad's loader checks the JS plugin matches this version)
     #[unsafe(no_mangle)]
-    pub extern "C" fn opensnake_net_crate_version() -> u32 {
+    pub extern "C" fn crustacean_net_crate_version() -> u32 {
         1
     }
 

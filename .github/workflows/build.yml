@@ -19,14 +19,14 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            file: opensnake
-            name: opensnake-linux
+            file: crustacean
+            name: crustacean-linux
           - os: windows-latest
-            file: opensnake.exe
-            name: opensnake-windows
+            file: crustacean.exe
+            name: crustacean-windows
           - os: macos-latest
-            file: opensnake
-            name: opensnake-macos
+            file: crustacean
+            name: crustacean-macos
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -50,7 +50,7 @@ jobs:
       - run: ./web/build-web.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: opensnake-web
+          name: crustacean-web
           path: web/dist
 
   # A version tag (v2.6.0) attaches the games to that GitHub release.
@@ -67,15 +67,15 @@ jobs:
       - name: Package
         run: |
           cd dist
-          chmod +x opensnake-linux/opensnake opensnake-macos/opensnake
-          tar czf opensnake-linux-x86_64.tar.gz -C opensnake-linux opensnake
-          tar czf opensnake-macos.tar.gz -C opensnake-macos opensnake
-          (cd opensnake-windows && zip -q ../opensnake-windows.zip opensnake.exe)
-          (cd opensnake-web && zip -qr ../opensnake-web.zip .)
+          chmod +x crustacean-linux/crustacean crustacean-macos/crustacean
+          tar czf crustacean-linux-x86_64.tar.gz -C crustacean-linux crustacean
+          tar czf crustacean-macos.tar.gz -C crustacean-macos crustacean
+          (cd crustacean-windows && zip -q ../crustacean-windows.zip crustacean.exe)
+          (cd crustacean-web && zip -qr ../crustacean-web.zip .)
       - name: Upload to the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 ||
-            gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "OpenSnake (Rust) ${GITHUB_REF_NAME#v}" --notes ""
+            gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "Crustacean ${GITHUB_REF_NAME#v}" --notes ""
           gh release upload "$GITHUB_REF_NAME" dist/*.tar.gz dist/*.zip --repo "$GITHUB_REPOSITORY" --clobber

@@ -111,7 +111,7 @@ impl App {
         online.check_server();
         let mut sfx = Sfx::load().await;
         sfx.volume = settings.volume;
-        let shot = std::env::var("OPENSNAKE_SHOT").ok().and_then(|s| {
+        let shot = std::env::var("CRUSTACEAN_SHOT").ok().and_then(|s| {
             let mut p = s.splitn(2, ':');
             Some((p.next()?.to_string(), p.next()?.to_string(), 0))
         });
@@ -365,7 +365,7 @@ impl App {
     fn screenshot(&mut self) {
         let Some((name, path, n)) = self.shot.as_mut() else { return };
         *n += 1;
-        if *n == std::env::var("OPENSNAKE_SHOT_FRAMES").ok().and_then(|f| f.parse().ok()).unwrap_or(90) {
+        if *n == std::env::var("CRUSTACEAN_SHOT_FRAMES").ok().and_then(|f| f.parse().ok()).unwrap_or(90) {
             let _ = name;
             let mut img = get_screen_data();
             for px in img.bytes.chunks_mut(4) {

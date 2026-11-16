@@ -1,4 +1,4 @@
-// OpenSnake's network, storage and file picking for the browser build
+// Crustacean's network, storage and file picking for the browser build
 // (the Rust side is src/net.rs). Results are queued as JSON events that the game
 // collects every frame.
 "use strict";
@@ -8,7 +8,8 @@
     let nextId = 1;
     const enc = new TextEncoder();
     const dec = new TextDecoder();
-    const SETTINGS_KEY = "opensnake-rs-settings";
+    const SETTINGS_KEY = "crustacean-settings";
+    const OLD_SETTINGS_KEY = "opensnake-rs-settings"; // (from before Crustacean had its name)
 
     function str(ptr, len) {
         return len ? dec.decode(new Uint8Array(wasm_memory.buffer, ptr, len)) : "";
@@ -71,7 +72,10 @@
 
     function os_storage_len() {
         let v = null;
-        try { v = window.localStorage.getItem(SETTINGS_KEY); } catch (e) { }
+        try {
+            v = window.localStorage.getItem(SETTINGS_KEY);
+            if (v === null) v = window.localStorage.getItem(OLD_SETTINGS_KEY); // (keeps your login)
+        } catch (e) { }
         return v === null ? -1 : offer(v);
     }
 
@@ -123,7 +127,7 @@
                 os_pick_image, os_origin_len, os_origin_take: take, os_set_title, os_now,
             });
         },
-        name: "opensnake_net",
+        name: "crustacean_net",
         version: 1,
     });
 })();

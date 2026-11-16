@@ -2,9 +2,9 @@
 //! speedrun in Python. assets/golden.json is made by the Python repo's
 //! tools/export_catalog.py.
 
-use opensnake::game::Dir;
-use opensnake::pyrandom::PyRandom;
-use opensnake::speedrun::{Category, Run};
+use crustacean::game::Dir;
+use crustacean::pyrandom::PyRandom;
+use crustacean::speedrun::{Category, Run};
 use serde_json::Value;
 
 fn golden() -> Value {

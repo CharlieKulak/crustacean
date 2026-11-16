@@ -44,8 +44,8 @@ impl App {
         // title
         let ty = h * 0.2;
         let pulse = 1.0 + 0.015 * (t * 2.0).sin();
-        self.ui.text("OpenSnake", w / 2.0 + 3.0 * u, ty + 5.0 * u, 76.0 * pulse, alpha(BLACK, 0.35), Align::Center, true);
-        let tw = self.ui.text("OpenSnake", w / 2.0, ty, 76.0 * pulse, INK, Align::Center, true);
+        self.ui.text("Crustacean", w / 2.0 + 3.0 * u, ty + 5.0 * u, 76.0 * pulse, alpha(BLACK, 0.35), Align::Center, true);
+        let tw = self.ui.text("Crustacean", w / 2.0, ty, 76.0 * pulse, INK, Align::Center, true);
         let apple = vec2(w / 2.0 + tw / 2.0 + 30.0 * u, ty - 6.0 * u + (t * 3.0).sin() * 4.0 * u);
         crate::render::draw_fruit("apple", apple, 22.0 * u);
         self.ui.text("Eat. Grow. Don't crash.", w / 2.0, ty + 50.0 * u, 18.0, MUTED, Align::Center, false);
