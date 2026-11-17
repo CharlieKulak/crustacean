@@ -345,6 +345,8 @@ pub fn skin_color(skin: &Skin, i: usize, n: usize, now: f64) -> Rgb {
             let on = hash01(i as i64, (now / 90.0).floor() as i64) > 0.88;
             lerp(base, c[2], if on { 1.0 } else { 0.0 })
         }
+        // paper like a dunce cap: cream, with a grey band every few cells
+        "dunce" => if i % 4 == 3 { c[1] } else { c[0] },
         "lights" => {
             // a string of coloured bulbs, twinkling on and off
             let bulb = c[i % c.len()];

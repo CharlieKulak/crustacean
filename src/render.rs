@@ -669,6 +669,26 @@ pub fn draw_snake(g: &Game, idx: usize, t: f32, skin: &Skin, board: &Rect, c: f3
     if s.shield > 0 {
         draw_circle_lines(head.x, head.y, c * 0.62, c * 0.06, alpha(rgb(80, 160, 255), 0.8 * fade));
     }
+    if skin.pattern == "dunce" {
+        dunce_cap(head, c, fade);
+    }
+}
+
+/// A dunce cap on a snake's head (the "dunce" skin): a tall paper cone with a D on it.
+pub fn dunce_cap(head: Vec2, c: f32, fade: f32) {
+    let base = head.y - c * 0.22;
+    let apex = vec2(head.x + c * 0.12, head.y - c * 1.35);
+    let (l, r) = (vec2(head.x - c * 0.42, base), vec2(head.x + c * 0.42, base));
+    draw_triangle(l + vec2(c * 0.05, c * 0.05), r + vec2(c * 0.05, c * 0.05), apex + vec2(c * 0.05, c * 0.05), alpha(BLACK, 0.2 * fade));
+    draw_triangle(l, r, apex, alpha(rgb(244, 238, 220), fade));
+    draw_triangle(l.lerp(apex, 0.45), r.lerp(apex, 0.45), apex, alpha(rgb(232, 225, 204), fade)); // (shading)
+    draw_line(l.x, l.y, apex.x, apex.y, c * 0.04, alpha(rgb(140, 134, 114), fade));
+    draw_line(r.x, r.y, apex.x, apex.y, c * 0.04, alpha(rgb(140, 134, 114), fade));
+    draw_line(l.x - c * 0.04, base, r.x + c * 0.04, base, c * 0.1, alpha(rgb(140, 134, 114), fade));
+    let size = (c * 0.42).max(6.0);
+    let d = measure_text("D", None, size as u16, 1.0);
+    let at = l.lerp(r, 0.5).lerp(apex, 0.3);
+    draw_text("D", at.x - d.width / 2.0, at.y + d.height / 2.0, size, alpha(rgb(40, 40, 40), fade));
 }
 
 fn arrow(p: Vec2, s: f32, d: Dir, c: Color) {
@@ -817,6 +837,9 @@ pub fn skin_preview(skin: &Skin, r: Rect, now: f64) {
         let e = head + vec2(c * 0.14, c * 0.2 * k);
         draw_circle(e.x, e.y, c * 0.15, WHITE);
         draw_circle(e.x + c * 0.05, e.y, c * 0.08, rgb(20, 24, 32));
+    }
+    if skin.pattern == "dunce" {
+        dunce_cap(head, c, 1.0);
     }
 }
 

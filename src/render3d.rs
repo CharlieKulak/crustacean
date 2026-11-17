@@ -494,6 +494,29 @@ pub fn draw_board3d(v: &View, area: Rect, fx: &Effects) {
                     b.sphere(e + d * 0.08 + vec3(0.0, 0.02, 0.0), 0.07, rgb(20, 24, 32), 5);
                 }
             }
+            if skin.pattern == "dunce" {
+                // a dunce cap: a paper cone standing on the head
+                let top = vec3(h.x + 0.5, 1.75, h.y + 0.5) - d * 0.1;
+                let seg = 14;
+                for k in 0..seg {
+                    let a0 = k as f32 / seg as f32 * std::f32::consts::TAU;
+                    let a1 = (k + 1) as f32 / seg as f32 * std::f32::consts::TAU;
+                    let p0 = vec3(h.x + 0.5 + a0.cos() * 0.34, 0.78, h.y + 0.5 + a0.sin() * 0.34);
+                    let p1 = vec3(h.x + 0.5 + a1.cos() * 0.34, 0.78, h.y + 0.5 + a1.sin() * 0.34);
+                    let lit = 0.82 + 0.18 * ((a0 + 0.8).cos() * 0.5 + 0.5);
+                    let col = Color::new(0.957 * lit, 0.933 * lit, 0.863 * lit, 1.0);
+                    b.tri(p0, p1, top, col);
+                    b.tri(p1, p0, top, col);
+                    // the band round its brim
+                    let q0 = p0 + vec3(0.0, 0.1, 0.0) + (top - p0) * 0.0;
+                    let q1 = p1 + vec3(0.0, 0.1, 0.0);
+                    let band = rgb(140, 134, 114);
+                    b.tri(p0, p1, q1, band);
+                    b.tri(p1, p0, q1, band);
+                    b.tri(p0, q1, q0, band);
+                    b.tri(q1, p0, q0, band);
+                }
+            }
             if s.shield > 0 {
                 for k in 0..12 {
                     let t = k as f32 / 12.0 * std::f32::consts::TAU + time as f32 * 2.0;

@@ -1,5 +1,5 @@
 {
- "version": "3.1.0",
+ "version": "3.1.1",
  "skins": [
   {
    "id": "mint",
@@ -1785,6 +1785,21 @@
    "series": "Ranked"
   },
   {
+   "id": "gambledtoomuch",
+   "name": "aogski gambled to much",
+   "rarity": "common",
+   "pattern": "dunce",
+   "colors": [
+    "#f4eedc",
+    "#c9c2ae",
+    "#3a3a3a"
+   ],
+   "outline": "#8c8672",
+   "glow": false,
+   "price": null,
+   "series": "Gift"
+  },
+  {
    "id": "cranberry",
    "name": "Cranberry Sauce",
    "rarity": "uncommon",
@@ -2364,6 +2379,7 @@
   }
  ],
  "untradeable": [
+  "skin:gambledtoomuch",
   "skin:rk_anaconda",
   "skin:rk_basilisk",
   "skin:rk_cobra",

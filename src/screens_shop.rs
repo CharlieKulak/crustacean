@@ -63,7 +63,7 @@ pub fn make_reel(item: &str, crate_id: &str) -> Vec<String> {
     // what this crate can give: a themed crate's own series, or else the usual pool
     let themed: std::collections::HashSet<String> = cat.crates.iter().filter(|c| !c.series.is_empty()).map(|c| c.series.clone()).collect();
     let pool: Vec<String> = if series.is_empty() {
-        cat.skins.iter().filter(|s| s.series != "Pass" && s.series != "Ranked" && !themed.contains(&s.series))
+        cat.skins.iter().filter(|s| s.series != "Pass" && s.series != "Ranked" && s.series != "Gift" && !themed.contains(&s.series))
             .map(|s| format!("skin:{}", s.id))
             .chain(cat.packs.iter().map(|p| format!("pack:{}", p.id)))
             .collect()
@@ -536,7 +536,8 @@ impl App {
                     self.fields.insert("sell_price", suggest.to_string());
                 }
             } else {
-                self.ui.text("Ranked reward", r.x + r.w - 14.0 * u, r.y + 174.0 * u, 11.0, C_GOLD, Align::Right, true);
+                let tag = if item.starts_with("skin:") && cat.skin(&item[5..]).is_some_and(|s| s.series == "Gift") { "Gift" } else { "Ranked reward" };
+                self.ui.text(tag, r.x + r.w - 14.0 * u, r.y + 174.0 * u, 11.0, C_GOLD, Align::Right, true);
             }
         }
         self.ui.end_scroll();
@@ -895,6 +896,9 @@ pub fn how_to_get(item: &str) -> String {
         if sk.series == "Pass" {
             return "Battle pass only".into();
         }
+        if sk.series == "Gift" {
+            return "A one-off gift".into();
+        }
         if sk.series == "Ranked" {
             let rank = cat.ranks.iter().find(|r| r.rewards.iter().any(|w| *w == sk.name)).map(|r| r.name.clone());
             return rank.map_or("Ranked reward".into(), |r| format!("Reach {r}"));
@@ -912,7 +916,7 @@ impl App {
 
     fn trades(&mut self, body: Rect) {
         let u = self.ui.u;
-        self.ui.text("Swap skins and packs (and snake points) with any player. Ranked skins can't be traded.",
+        self.ui.text("Swap skins and packs (and snake points) with any player. Ranked and gift skins can't be traded.",
                      body.x, body.y + 18.0 * u, 14.0, MUTED, Align::Left, false);
         if self.ui.button_icon("New trade", "plus", Rect::new(body.x + body.w - 170.0 * u, body.y, 160.0 * u, 40.0 * u), Style::Primary) {
             self.trade_draft = Some(crate::app::TradeDraft::default());
