@@ -11,23 +11,39 @@ use std::collections::HashMap;
 pub struct BoardColors {
     pub light: Color,
     pub dark: Color,
+    /// Minesweeper: the cells a snake has been over (dug up, like the original's brown tiles).
+    pub sand: Color,
+    pub sand_dark: Color,
     pub border: Color,
     pub header: Color,
 }
 
 impl Default for BoardColors {
     fn default() -> Self {
-        BoardColors { light: rgb(170, 215, 81), dark: rgb(162, 209, 73), border: rgb(87, 138, 52), header: rgb(74, 117, 44) }
+        BoardColors { light: rgb(170, 215, 81), dark: rgb(162, 209, 73), sand: rgb(229, 194, 159),
+                      sand_dark: rgb(215, 184, 153), border: rgb(87, 138, 52), header: rgb(74, 117, 44) }
     }
 }
 
 impl BoardColors {
+    /// The colour of one board cell.
+    pub fn tile(&self, x: i32, y: i32, dug: bool) -> Color {
+        match ((x + y) % 2 == 0, dug) {
+            (true, false) => self.light,
+            (false, false) => self.dark,
+            (true, true) => self.sand,
+            (false, true) => self.sand_dark,
+        }
+    }
+
     pub fn from_pack(colors: &HashMap<String, Rgb>) -> BoardColors {
         let d = BoardColors::default();
         let get = |k: &str, def: Color| colors.get(k).map(|c| rgbt(*c)).unwrap_or(def);
         BoardColors {
             light: get("board_light", d.light),
             dark: get("board_dark", d.dark),
+            sand: get("board_sand", d.sand),
+            sand_dark: get("board_sand_dark", d.sand_dark),
             border: get("border", d.border),
             header: get("header", d.header),
         }
@@ -44,6 +60,20 @@ pub fn fruit_color(f: &str) -> Color {
         "banana" => rgb(255, 217, 59),
         _ => rgb(231, 71, 29),
     }
+}
+
+pub const GATE_OPEN: Color = rgb(46, 196, 92);
+pub const GATE_SHUT: Color = rgb(214, 56, 48);
+pub const GATE_SOON: Color = rgb(255, 184, 28);
+
+/// How much of a gate's current state is left (1 = just switched, 0 = switching now), and
+/// whether it switches in the next couple of moves.
+pub fn gate_timer(g: &Game, gt: &crate::game::Gate) -> (f32, bool) {
+    let period = gt.period.max(2) as i64;
+    let half = period / 2;
+    let pos = (g.tick + gt.phase as i64).rem_euclid(period);
+    let (left, span) = if pos < half { (half - pos, half) } else { (period - pos, period - half) };
+    (left as f32 / span as f32, left <= 2)
 }
 
 pub const PORTAL_COLORS: [Color; 6] =
@@ -178,10 +208,11 @@ pub fn draw_board(v: &View, area: Rect, fx: &Effects) -> (Rect, f32) {
     let pad = (c * 0.22).max(4.0);
     rounded(Rect::new(r.x - pad, r.y - pad + 4.0, r.w + pad * 2.0, r.h + pad * 2.0), pad * 1.5, alpha(BLACK, 0.3));
     rounded(Rect::new(r.x - pad, r.y - pad, r.w + pad * 2.0, r.h + pad * 2.0), pad * 1.5, v.colors.border);
-    // checkerboard
+    // checkerboard (minesweeper: cells a snake has been over are dug up, sandy brown)
+    let mines = g.has("minesweeper");
     for y in y0..y1 {
         for x in x0..x1 {
-            let col = if (x + y) % 2 == 0 { v.colors.light } else { v.colors.dark };
+            let col = v.colors.tile(x, y, mines && g.revealed.contains(&(x, y)));
             draw_rectangle(r.x + x as f32 * c, r.y + y as f32 * c, c + 0.5, c + 0.5, col);
         }
     }
@@ -236,25 +267,37 @@ pub fn draw_board(v: &View, area: Rect, fx: &Effects) -> (Rect, f32) {
             crate::ui::rounded_outline(Rect::new(p.x + c * 0.12, p.y + c * 0.12, c * 0.76, c * 0.76), c * 0.14, (c * 0.06).max(1.0), alpha(base, 0.5));
         }
     }
-    // gates
+    // gates: green and open, red and shut, amber when about to switch, with a timer bar
     for gt in &g.gates {
+        let (x, y) = (gt.x, gt.y);
+        if x < x0 - 1 || x > x1 || y < y0 - 1 || y > y1 {
+            continue; // (off screen on a big board)
+        }
         let p = at(gt.x as f32, gt.y as f32);
+        let (left, soon) = gate_timer(g, gt);
+        let pulse = 0.5 + 0.5 * ((time * 10.0) as f32).sin();
         if gt.open {
-            for k in [0.15, 0.85] {
-                draw_rectangle(p.x + c * k - c * 0.05, p.y + c * 0.08, c * 0.1, c * 0.84, rgb(110, 110, 120));
+            let col = if soon { mix(GATE_OPEN, GATE_SOON, pulse) } else { GATE_OPEN };
+            rounded(Rect::new(p.x + c * 0.04, p.y + c * 0.04, c * 0.92, c * 0.92), c * 0.12, alpha(col, 0.38));
+            crate::ui::rounded_outline(Rect::new(p.x + c * 0.06, p.y + c * 0.06, c * 0.88, c * 0.88), c * 0.12,
+                                       (c * 0.06).max(1.5), col);
+            for k in [0.13, 0.87] {
+                rounded(Rect::new(p.x + c * k - c * 0.06, p.y + c * 0.06, c * 0.12, c * 0.88), c * 0.05, darken(col, 0.2));
             }
         } else {
-            rounded(Rect::new(p.x + c * 0.05, p.y + c * 0.05, c * 0.9, c * 0.9), c * 0.1, rgb(90, 92, 104));
+            let col = if soon { mix(GATE_SHUT, GATE_SOON, pulse) } else { GATE_SHUT };
+            rounded(Rect::new(p.x + c * 0.03, p.y + c * 0.08, c * 0.94, c * 0.9), c * 0.12, darken(col, 0.45));
+            rounded(Rect::new(p.x + c * 0.03, p.y + c * 0.03, c * 0.94, c * 0.88), c * 0.12, col);
             for k in 0..4 {
                 let xx = p.x + c * (0.2 + k as f32 * 0.2);
-                draw_rectangle(xx - c * 0.04, p.y + c * 0.1, c * 0.08, c * 0.8, rgb(150, 152, 165));
+                draw_rectangle(xx - c * 0.045, p.y + c * 0.1, c * 0.09, c * 0.7, darken(col, 0.4));
             }
+            draw_rectangle(p.x + c * 0.1, p.y + c * 0.42, c * 0.8, c * 0.08, darken(col, 0.4));
         }
-        // a little timer ring: how long until it switches
-        let phase = ((g.tick + gt.phase as i64).rem_euclid(gt.period as i64)) as f32 / gt.period as f32;
-        let left = if gt.open { 0.5 - phase } else { 1.0 - phase } * 2.0;
-        draw_circle(p.x + c * 0.82, p.y + c * 0.18, c * 0.12, if gt.open { rgb(60, 180, 90) } else { rgb(220, 70, 60) });
-        draw_circle(p.x + c * 0.82, p.y + c * 0.18, c * 0.06 * left.clamp(0.0, 1.0) + 0.5, WHITE);
+        // how long until it switches: a bar along the bottom
+        let bar = Rect::new(p.x + c * 0.14, p.y + c * 0.84, c * 0.72, (c * 0.09).max(2.0));
+        rounded(bar, bar.h / 2.0, alpha(BLACK, 0.45));
+        rounded(Rect::new(bar.x, bar.y, (bar.w * left).max(bar.h), bar.h), bar.h / 2.0, WHITE);
     }
     // mines (shown when the game's over)
     if v.reveal {
@@ -339,6 +382,28 @@ pub fn draw_board(v: &View, area: Rect, fx: &Effects) -> (Rect, f32) {
                 if dark > 0.0 {
                     draw_rectangle(r.x + x as f32 * c, r.y + y as f32 * c, c + 0.5, c + 0.5, Color::new(0.03, 0.04, 0.08, dark));
                 }
+            }
+        }
+        // the fruit glows in the dark: a soft light round it, and the fruit on top
+        for a in &g.apples {
+            let (x, y) = (a.x, a.y);
+            if x < x0 - 1 || x > x1 || y < y0 - 1 || y > y1 {
+                continue;
+            }
+            let pnt = at(a.x as f32 + 0.5, a.y as f32 + 0.5);
+            let col = if a.poison { rgb(160, 80, 230) } else { lighten(fruit_color(&a.fruit), 0.25) };
+            let flicker = 1.0 + 0.08 * ((time * 3.0 + a.x as f64 * 1.3 + a.y as f64) as f32).sin();
+            crate::ui::glow(pnt.x, pnt.y, c * 1.25 * flicker, col, 2.4);
+            crate::ui::glow(pnt.x, pnt.y, c * 0.6, lighten(col, 0.5), 3.0);
+            if a.poison {
+                poison_fruit(pnt, c * 0.36, time);
+            } else {
+                draw_fruit(&a.fruit, pnt, c * 0.4);
+            }
+            if a.locked {
+                let lp = pnt + vec2(c * 0.22, c * 0.22);
+                draw_circle(lp.x, lp.y, c * 0.2, rgb(60, 60, 70));
+                crate::ui::draw_icon("lock", lp.x, lp.y, c * 0.26, rgb(255, 196, 0));
             }
         }
     }
@@ -496,7 +561,7 @@ pub fn body_path(g: &Game, idx: usize, t: f32, step: f32) -> Vec<BodyPoint> {
 /// Skins whose colours change cell by cell (stripes and the like) keep crisp edges;
 /// the rest blend smoothly along the body.
 fn crisp(skin: &Skin) -> bool {
-    matches!(skin.pattern.as_str(), "stripes" | "chevron" | "scales" | "spark" | "galaxy")
+    matches!(skin.pattern.as_str(), "stripes" | "chevron" | "scales" | "spark" | "galaxy" | "lights")
 }
 
 /// A skin's colour at any point down the body (between cells too).

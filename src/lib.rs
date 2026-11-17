@@ -9,6 +9,7 @@ pub mod online;
 pub mod pyrandom;
 pub mod render;
 pub mod render3d;
+pub mod screens_jackpot;
 pub mod screens_main;
 pub mod screens_online;
 pub mod screens_shop;

@@ -5,7 +5,8 @@
 
 use crate::cosmetics::{skin_outline, Skin};
 use crate::game::Dir;
-use crate::render::{body_color, body_path, fruit_color, snake_points, BoardColors, Effects, View, PORTAL_COLORS};
+use crate::render::{body_color, body_path, fruit_color, gate_timer, snake_points, BoardColors, Effects, View, GATE_OPEN,
+                    GATE_SHUT, GATE_SOON, PORTAL_COLORS};
 use crate::ui::{alpha, darken, lighten, mix, rgb, rgbt};
 use macroquad::models::{Mesh, Vertex};
 use macroquad::prelude::*;
@@ -112,6 +113,24 @@ impl Batch {
             let t = k as f32 / segs as f32 * std::f32::consts::TAU;
             self.verts.push(Vertex::new2(vec3(x + t.cos() * r, 0.01, z + t.sin() * r), vec2(0.0, 0.0),
                                          Color::new(0.0, 0.0, 0.0, 0.0)));
+        }
+        for k in 0..segs as u16 {
+            self.idx.extend_from_slice(&[base, base + 1 + k, base + 2 + k]);
+        }
+    }
+
+    /// A soft coloured light on the floor (glowing fruit in Lights Out).
+    fn floor_glow(&mut self, x: f32, z: f32, r: f32, c: Color, layer: usize) {
+        // (each a hair higher than the last, so overlapping ones don't flicker against each other)
+        let y = 0.012 + (layer % 64) as f32 * 0.0006;
+        let segs = 16;
+        self.room(segs + 2);
+        let base = self.verts.len() as u16;
+        self.verts.push(Vertex::new2(vec3(x, y, z), vec2(0.0, 0.0), c));
+        for k in 0..=segs {
+            let t = k as f32 / segs as f32 * std::f32::consts::TAU;
+            self.verts.push(Vertex::new2(vec3(x + t.cos() * r, y, z + t.sin() * r), vec2(0.0, 0.0),
+                                         Color::new(c.r, c.g, c.b, 0.0)));
         }
         for k in 0..segs as u16 {
             self.idx.extend_from_slice(&[base, base + 1 + k, base + 2 + k]);
@@ -258,9 +277,10 @@ pub fn draw_board3d(v: &View, area: Rect, fx: &Effects) {
     let (fw, fh) = (g.w as f32, g.h as f32);
     // (its top sits just under the tiles, so the two never fight over the same depth)
     b.cuboid(vec3(fw / 2.0, -0.37, fh / 2.0), vec3(fw + 0.6, 0.7, fh + 0.6), colors.border);
+    let mines = g.has("minesweeper");
     for y in vy0..vy1 {
         for x in vx0..vx1 {
-            let c = if (x + y) % 2 == 0 { colors.light } else { colors.dark };
+            let c = colors.tile(x, y, mines && g.revealed.contains(&(x, y)));
             let k = lit(x as f32, y as f32);
             let (x0, z0) = (x as f32, y as f32);
             b.quad(vec3(x0, 0.0, z0), vec3(x0 + 1.0, 0.0, z0), vec3(x0 + 1.0, 0.0, z0 + 1.0), vec3(x0, 0.0, z0 + 1.0), dim(c, k));
@@ -272,12 +292,20 @@ pub fn draw_board3d(v: &View, area: Rect, fx: &Effects) {
             b.shadow(p.x as f32 + 0.55, p.y as f32 + 0.6, 0.5, 0.18);
         }
     }
-    for a in &g.apples {
+    let glowing = g.has("light") && !g.over;
+    for (layer, a) in g.apples.iter().enumerate() {
         let (x, y) = (a.x, a.y);
         if x < vx0 - 1 || x > vx1 || y < vy0 - 1 || y > vy1 {
             continue; // (out of view on a big board)
         }
-        b.shadow(a.x as f32 + 0.55, a.y as f32 + 0.6, 0.38, 0.22);
+        if glowing {
+            // Lights Out: the fruit glows, lighting the floor round it
+            let col = if a.poison { rgb(160, 80, 230) } else { lighten(fruit_color(&a.fruit), 0.3) };
+            let flicker = 1.0 + 0.08 * ((time * 3.0 + a.x as f64 * 1.3 + a.y as f64) as f32).sin();
+            b.floor_glow(a.x as f32 + 0.5, a.y as f32 + 0.5, 1.5 * flicker, alpha(col, 0.75), layer);
+        } else {
+            b.shadow(a.x as f32 + 0.55, a.y as f32 + 0.6, 0.38, 0.22);
+        }
     }
     let center = |x: i32, y: i32, hgt: f32| vec3(x as f32 + 0.5, hgt, y as f32 + 0.5);
 
@@ -329,18 +357,31 @@ pub fn draw_board3d(v: &View, area: Rect, fx: &Effects) {
             b.cuboid(center(w.x, w.y, 0.03), vec3(0.8, 0.05, 0.8), alpha(c, 0.45));
         }
     }
+    // gates: green and open, red and shut, amber when about to switch, with a timer bar
     for gt in &g.gates {
+        let (x, y) = (gt.x, gt.y);
+        if x < vx0 - 1 || x > vx1 || y < vy0 - 1 || y > vy1 {
+            continue; // (out of view on a big board)
+        }
+        let (left, soon) = gate_timer(g, gt);
+        let pulse = 0.5 + 0.5 * ((time * 10.0) as f32).sin();
         if gt.open {
-            for k in [-0.38, 0.38] {
-                b.cuboid(center(gt.x, gt.y, 0.45) + vec3(k, 0.0, 0.0), vec3(0.1, 0.9, 0.1), rgb(110, 110, 120));
+            let col = if soon { mix(GATE_OPEN, GATE_SOON, pulse) } else { GATE_OPEN };
+            b.cuboid(center(gt.x, gt.y, 0.02), vec3(0.94, 0.03, 0.94), alpha(col, 0.55));
+            for k in [-0.4, 0.4] {
+                b.cuboid(center(gt.x, gt.y, 0.5) + vec3(k, 0.0, 0.0), vec3(0.12, 1.0, 0.12), col);
             }
         } else {
-            b.cuboid(center(gt.x, gt.y, 0.45), vec3(0.9, 0.9, 0.9), rgb(90, 92, 104));
+            let col = if soon { mix(GATE_SHUT, GATE_SOON, pulse) } else { GATE_SHUT };
+            b.cuboid(center(gt.x, gt.y, 0.45), vec3(0.92, 0.9, 0.92), col);
             for k in 0..4 {
-                b.cuboid(center(gt.x, gt.y, 0.45) + vec3(-0.3 + k as f32 * 0.2, 0.0, 0.46), vec3(0.06, 0.8, 0.02),
-                         rgb(170, 172, 185));
+                b.cuboid(center(gt.x, gt.y, 0.45) + vec3(-0.3 + k as f32 * 0.2, 0.0, 0.465), vec3(0.07, 0.8, 0.02),
+                         darken(col, 0.45));
             }
         }
+        // how long until it switches: a bar floating above it
+        b.cuboid(center(gt.x, gt.y, 1.12), vec3(0.8, 0.07, 0.1), rgb(30, 30, 36));
+        b.cuboid(center(gt.x, gt.y, 1.12) + vec3(-0.4 + 0.4 * left, 0.0, 0.02), vec3(0.8 * left.max(0.05), 0.08, 0.1), WHITE);
     }
     if v.reveal {
         for &(x, y) in &g.mines {
@@ -385,7 +426,7 @@ pub fn draw_board3d(v: &View, area: Rect, fx: &Effects) {
             b.sphere(c + vec3(0.0, 0.0, 0.26), 0.07, rgb(230, 255, 200), 4);
         } else {
             let col = fruit_color(&a.fruit);
-            b.sphere(c, 0.3, col, 8);
+            b.sphere(c, 0.3, if glowing { lighten(col, 0.3) } else { col }, 8);
             b.cuboid(c + vec3(0.0, 0.32, 0.0), vec3(0.05, 0.14, 0.05), rgb(107, 68, 35));
             b.cuboid(c + vec3(0.1, 0.34, 0.0), vec3(0.16, 0.03, 0.08), rgb(76, 175, 55));
         }

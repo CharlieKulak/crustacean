@@ -18,6 +18,8 @@ pub struct Settings {
     pub board_h: i32,
     pub speed: f32,
     pub modes: Vec<String>,
+    /// Accelerate: faster with every fruit eaten
+    pub accelerate: bool,
     pub fruit: String,
     pub fruit_count: i32,
     pub best: HashMap<String, i32>,
@@ -50,6 +52,7 @@ impl Default for Settings {
             board_h: 15,
             speed: 0.5,
             modes: Vec::new(),
+            accelerate: false,
             fruit: "apple".into(),
             fruit_count: 1,
             best: HashMap::new(),
@@ -92,6 +95,27 @@ pub fn speed_ms(value: f32) -> f64 {
         }
     }
     45.0
+}
+
+/// Accelerate: this many ms faster per fruit eaten, down to the fastest speed (like the server's).
+pub const ACCEL_MS: f64 = 4.0;
+pub const MIN_TICK_MS: f64 = 45.0;
+
+impl Settings {
+    /// The name of the current setup: its modes, and Accelerate if it's on.
+    pub fn play_label(&self) -> String {
+        let modes = crate::cosmetics::catalog().mode_label(&self.modes);
+        match (self.accelerate, self.modes.is_empty()) {
+            (false, _) => modes,
+            (true, true) => "Accelerate".into(),
+            (true, false) => format!("{modes} + Accelerate"),
+        }
+    }
+
+    /// Where best scores are kept for the current setup.
+    pub fn best_key(&self) -> String {
+        format!("{}x{} {} {}", self.board_w, self.board_h, self.play_label(), self.fruit_count)
+    }
 }
 
 pub fn speed_label(value: f32) -> &'static str {

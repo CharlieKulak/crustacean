@@ -47,6 +47,28 @@ pub struct PlayState {
     pub result: Option<Value>,
     pub origin: Screen,
     pub pb_before: Option<i64>,
+    /// Watching a world record (its inputs play themselves), not playing.
+    pub replay: Option<Replay>,
+}
+
+/// A world record run being watched.
+pub struct Replay {
+    pub data: Value,
+    pub inputs: Vec<(i64, Dir)>,
+    pub next: usize,
+    pub player: String,
+    pub time_ms: i64,
+}
+
+impl PlayState {
+    /// Watching: hand the run the recorded turns due by now (as the server's replay does).
+    fn feed(&mut self) {
+        let (Some(rp), Some(run)) = (self.replay.as_mut(), self.run.as_mut()) else { return };
+        while rp.next < rp.inputs.len() && rp.inputs[rp.next].0 <= run.game.tick {
+            run.input(rp.inputs[rp.next].1);
+            rp.next += 1;
+        }
+    }
 }
 
 impl PlayState {
@@ -84,6 +106,8 @@ pub struct App {
     pub tabs: HashMap<Screen, usize>,
     pub fields: HashMap<&'static str, String>,
     pub reveal: Option<Reveal>,
+    /// Loot boxes waiting to be shown after the one showing now (several from one reward).
+    pub reveal_queue: Vec<Value>,
     pub selected: Option<String>,
     pub selling: Option<String>,
     pub viewing: Option<String>,
@@ -93,6 +117,41 @@ pub struct App {
     pub intro: f64,
     /// (screenshots: hold the game half way between two moves)
     pub frozen: bool,
+    /// A community run being made (the Create popup on Speedrun > Community).
+    pub draft: Option<Draft>,
+    /// A trade being put together (Store > Trades > New trade).
+    pub trade_draft: Option<TradeDraft>,
+    /// The jackpot: what you've picked to put in, the last draw shown, and the draw animation.
+    pub jackpot_pick: Vec<String>,
+    pub jackpot_seen: Option<i64>,
+    pub jackpot_anim: Option<(Value, f64)>,
+    /// Another OpenSnake game is running on this computer: wait for it to close.
+    pub blocked: bool,
+    blocked_checked: f64,
+}
+
+/// A trade offer being put together.
+#[derive(Clone, Default)]
+pub struct TradeDraft {
+    pub to: String,
+    pub give: Vec<String>,
+    pub give_points: i32,
+    pub want: Vec<String>,
+    pub want_points: i32,
+}
+
+/// The rules of a community run being made.
+#[derive(Clone)]
+pub struct Draft {
+    pub name: String,
+    pub w: i32,
+    pub h: i32,
+    pub modes: Vec<String>,
+    pub fruit_count: i32,
+    pub speed: f32,
+    pub accelerate: bool,
+    /// fruit to eat (0: fill the board)
+    pub goal: i32,
 }
 
 impl App {
@@ -108,7 +167,15 @@ impl App {
             settings.server = DEFAULT_SERVER.into();
         }
         let mut online = Online::new(settings.server.clone(), settings.token.clone(), settings.user.clone());
-        online.check_server();
+        // One OpenSnake game per computer, whoever's logged in to it. (Screenshots don't count.)
+        let checking = std::env::var("CRUSTACEAN_SHOT").is_err() || std::env::var("CRUSTACEAN_CHECK_INSTANCE").is_ok();
+        let blocked = checking && crate::net::other_instance();
+        if std::env::var("CRUSTACEAN_DEBUG").is_ok() {
+            eprintln!("another OpenSnake game running: {blocked}");
+        }
+        if !blocked {
+            online.check_server();
+        }
         let mut sfx = Sfx::load().await;
         sfx.volume = settings.volume;
         let shot = std::env::var("CRUSTACEAN_SHOT").ok().and_then(|s| {
@@ -127,6 +194,7 @@ impl App {
             tabs: HashMap::new(),
             fields: HashMap::new(),
             reveal: None,
+            reveal_queue: Vec::new(),
             selected: None,
             selling: None,
             viewing: None,
@@ -135,6 +203,13 @@ impl App {
             quit: false,
             intro: get_time(),
             frozen: false,
+            draft: None,
+            trade_draft: None,
+            jackpot_pick: Vec::new(),
+            jackpot_seen: None,
+            jackpot_anim: None,
+            blocked,
+            blocked_checked: get_time(),
         };
         if let Some((name, _, _)) = app.shot.clone() {
             app.open_named(&name);
@@ -192,10 +267,17 @@ impl App {
             }
             Screen::Leaderboard => o.get("/api/rankings", Req::Rankings),
             Screen::Pass if o.logged_in() => o.get("/api/battlepass", Req::Pass),
-            Screen::Daily if o.logged_in() => o.get("/api/daily", Req::Daily),
+            Screen::Daily if o.logged_in() => {
+                o.get("/api/daily", Req::Daily);
+                o.get("/api/login-reward", Req::LoginReward);
+            }
+            Screen::Menu if o.logged_in() => o.get("/api/login-reward", Req::LoginReward),
             Screen::Store => {
                 o.refresh_me();
                 o.get("/api/market", Req::Market);
+                if o.logged_in() {
+                    o.get("/api/trades", Req::Trades);
+                }
             }
             Screen::Profile if o.logged_in() => {
                 o.refresh_me();
@@ -215,6 +297,21 @@ impl App {
             "speedrun" => (Screen::Speedrun, 0),
             "weekly" => (Screen::Speedrun, 1),
             "community" => (Screen::Speedrun, 2),
+            "newtrade" => {
+                self.trade_draft = Some(TradeDraft { to: "gentastic".into(), give_points: 1000, ..Default::default() });
+                self.online.get("/api/users/gentastic/items", Req::UserItems("gentastic".into()));
+                (Screen::Store, 3)
+            }
+            "watch" => {
+                // ask for Sprint 10's world record: it starts playing when it arrives
+                self.online.get("/api/replay/sprint10", Req::Replay("sprint10".into()));
+                (Screen::Speedrun, 0)
+            }
+            "create" => {
+                self.draft = Some(Draft { name: "Speedy walls".into(), w: 14, h: 12, modes: vec!["wall".into(), "gate".into()],
+                                          fruit_count: 2, speed: 0.5, accelerate: true, goal: 20 });
+                (Screen::Speedrun, 2)
+            }
             "community_search" => {
                 self.fields.insert("comm_q", "gentastic".into());
                 (Screen::Speedrun, 2)
@@ -226,15 +323,23 @@ impl App {
             "store" => (Screen::Store, 0),
             "crates" => (Screen::Store, 1),
             "market" => (Screen::Store, 2),
-            "collection" => (Screen::Store, 3),
+            "trades" => (Screen::Store, 3),
+            "collection" => (Screen::Store, 5),
+            "jackpot" => (Screen::Store, 4),
+            "jackdraw" => {
+                self.jackpot_seen = Some(0); // (show the last draw)
+                (Screen::Store, 4)
+            }
+            "index" => (Screen::Store, 6),
             "pass" => (Screen::Pass, 0),
             "daily" => (Screen::Daily, 0),
             "leaderboard" => (Screen::Leaderboard, 0),
             "packs" => (Screen::Packs, 0),
             "settings" => (Screen::Settings, 0),
-            "play" | "play3d" => {
-                self.settings.view3d = name == "play3d";
-                self.settings.modes = vec!["wall".into(), "key".into(), "shield".into()];
+            "play" | "play3d" | "mines" | "mines3d" => {
+                self.settings.view3d = name.ends_with("3d");
+                self.settings.modes = if name.starts_with("mines") { vec!["minesweeper".into()] }
+                                      else { vec!["wall".into(), "key".into(), "shield".into()] };
                 self.settings.fruit_count = 3;
                 self.start_round();
                 for d in [Dir::Up, Dir::Right] {
@@ -284,6 +389,26 @@ impl App {
                 self.frozen = true;
                 return;
             }
+            "gates" | "gates3d" | "lights" | "lights3d" => {
+                // gates in every state, or Lights Out with fruit glowing in the dark
+                self.settings.view3d = name.ends_with("3d");
+                let gates = name.starts_with("gates");
+                self.settings.modes = vec![if gates { "gate" } else { "light" }.into()];
+                (self.settings.board_w, self.settings.board_h) = (17, 15);
+                self.settings.fruit_count = if gates { 2 } else { 8 };
+                self.start_round();
+                if let Some(p) = self.play.as_mut() {
+                    let g = p.game_mut();
+                    if gates {
+                        for _ in 0..8 {
+                            g.spawn_gate();
+                        }
+                    }
+                    g.input(Dir::Up);
+                }
+                self.frozen = true;
+                return;
+            }
             "full" | "full3d" => {
                 // a big board packed with as much fruit as it holds
                 self.settings.view3d = name == "full3d";
@@ -328,6 +453,12 @@ impl App {
 
     pub fn frame(&mut self) {
         self.ui.begin();
+        if self.blocked {
+            self.blocked_screen();
+            self.ui.end();
+            self.screenshot();
+            return;
+        }
         let now = self.now_ms();
         self.online.poll(now);
         self.handle_notices();
@@ -362,6 +493,43 @@ impl App {
         self.screenshot();
     }
 
+    /// Shown instead of the game while another OpenSnake game runs on this computer.
+    fn blocked_screen(&mut self) {
+        if self.ui.time - self.blocked_checked > 1.0 {
+            self.blocked_checked = self.ui.time;
+            if !crate::net::other_instance() {
+                self.blocked = false; // (the other one closed: carry on)
+                self.online.check_server();
+                return;
+            }
+        }
+        let u = self.ui.u;
+        let (w, h) = (self.ui.w, self.ui.h);
+        clear_background(BG_BOTTOM);
+        self.ui.background();
+        let cw = (560.0 * u).min(w - 32.0 * u);
+        let r = Rect::new((w - cw) / 2.0, h / 2.0 - 150.0 * u, cw, 300.0 * u);
+        self.ui.card(r);
+        draw_circle(r.x + cw / 2.0, r.y + 62.0 * u, 34.0 * u, alpha(C_GOLD, 0.16));
+        draw_icon("lock", r.x + cw / 2.0, r.y + 62.0 * u, 32.0 * u, C_GOLD);
+        self.ui.text("OpenSnake is already running", r.x + cw / 2.0, r.y + 124.0 * u, 24.0, INK, Align::Center, true);
+        #[cfg(target_arch = "wasm32")]
+        let why = "It's open in another tab or window. Close that one to play here.";
+        #[cfg(not(target_arch = "wasm32"))]
+        let why = "Another OpenSnake game is open on this computer. Close it to play here.";
+        let why = self.ui.fit(why, 15.0, false, cw - 40.0 * u);
+        self.ui.text(&why, r.x + cw / 2.0, r.y + 162.0 * u, 15.0, MUTED, Align::Center, false);
+        let note = self.ui.fit("One game per computer, whichever account. This one starts by itself once the other closes.",
+                               11.0, false, cw - 32.0 * u);
+        self.ui.text(&note, r.x + cw / 2.0, r.y + 190.0 * u, 11.0, FAINT, Align::Center, false);
+        #[cfg(not(target_arch = "wasm32"))]
+        if self.ui.button("Quit", Rect::new(r.x + cw / 2.0 - 90.0 * u, r.y + 226.0 * u, 180.0 * u, 48.0 * u), Style::Secondary)
+            || self.ui.hotkey(KeyCode::Escape)
+        {
+            self.quit = true;
+        }
+    }
+
     fn screenshot(&mut self) {
         let Some((name, path, n)) = self.shot.as_mut() else { return };
         *n += 1;
@@ -389,6 +557,7 @@ impl App {
                     self.ui.toast(text, c);
                 }
                 Notice::Sound(s) => self.sfx.play(s),
+                Notice::CrateOpened(d) if self.reveal.is_some() => self.reveal_queue.push(d),
                 Notice::CrateOpened(d) => {
                     let item = d["item"].as_str().unwrap_or("").to_string();
                     let crate_id = d["tier"]["crate"].as_str().or(d["crate"].as_str()).unwrap_or("").to_string();
@@ -445,6 +614,9 @@ impl App {
                     self.sfx.play("start");
                     let _ = m;
                 }
+                Notice::Replay(d) => self.watch(d),
+                Notice::TradeSent => self.trade_draft = None,
+                Notice::JackpotEntered => self.jackpot_pick.clear(),
                 Notice::Dm(m) => {
                     let from = m["from"].as_str().unwrap_or("").to_string();
                     let me = self.online.user.clone().unwrap_or_default();
@@ -471,7 +643,7 @@ impl App {
         let seed = (rand::rand() as i64) & 0x7fff_ffff;
         let game = Game::new(s.board_w, s.board_h, &modes, s.fruit_count, &s.fruit, PyRandom::new(seed));
         self.play = Some(PlayState { run: None, game, acc: 0.0, paused: false, over_at: None, reported: false,
-                                     new_best: false, result: None, origin: Screen::Setup, pb_before: None });
+                                     new_best: false, result: None, origin: Screen::Setup, pb_before: None, replay: None });
         self.fx = Effects::default();
         self.go(Screen::Play);
     }
@@ -482,13 +654,18 @@ impl App {
         let run = Run::new(cat, seed);
         let game = run.game.clone();
         self.play = Some(PlayState { run: Some(run), game, acc: 0.0, paused: false, over_at: None, reported: false,
-                                     new_best: false, result: None, origin, pb_before: pb });
+                                     new_best: false, result: None, origin, pb_before: pb, replay: None });
         self.fx = Effects::default();
         self.go(Screen::Play);
     }
 
     pub fn restart(&mut self) {
         let Some(p) = &self.play else { return };
+        if let Some(rp) = &p.replay {
+            let data = rp.data.clone();
+            self.watch(data);
+            return;
+        }
         let origin = p.origin;
         match &p.run {
             Some(r) => {
@@ -500,11 +677,46 @@ impl App {
         self.screen = Screen::Play;
     }
 
+    /// Watch a world record run: {player, time_ms, date, run}.
+    pub fn watch(&mut self, d: Value) {
+        let run = &d["run"];
+        let id = run["category"].as_str().unwrap_or("").to_string();
+        // the category: built-in, or this week's (from the server's list)
+        let cat = catalog().categories.iter().find(|c| c.id == id).cloned().or_else(|| {
+            self.online.weekly.as_ref()?["categories"].as_array()?.iter().find(|c| c["id"].as_str() == Some(&id))
+                .and_then(|c| Category::from_server(&id, c["name"].as_str()?, c["desc"].as_str().unwrap_or(""), &c["def"]))
+        });
+        let Some(cat) = cat else {
+            self.ui.toast("That run's category isn't one this game knows.", C_RED);
+            return;
+        };
+        let inputs: Vec<(i64, Dir)> = run["inputs"].as_array().cloned().unwrap_or_default().iter()
+            .filter_map(|i| Some((i[0].as_i64()?, Dir::parse(i[1].as_str()?)?))).collect();
+        let r = Run::new(cat, run["seed"].as_i64().unwrap_or(0));
+        let game = r.game.clone();
+        let replay = Replay { player: d["player"].as_str().unwrap_or("?").to_string(), time_ms: d["time_ms"].as_i64().unwrap_or(0),
+                              inputs, next: 0, data: d.clone() };
+        self.play = Some(PlayState { run: Some(r), game, acc: 0.0, paused: false, over_at: None, reported: false,
+                                     new_best: false, result: None, origin: Screen::Speedrun, pb_before: None,
+                                     replay: Some(replay) });
+        self.fx = Effects::default();
+        self.go(Screen::Play);
+        self.screen = Screen::Play;
+    }
+
     fn tick_ms(&self) -> f64 {
         match &self.play {
             Some(p) => match &p.run {
                 Some(r) => r.tick_ms(),
-                None => speed_ms(self.settings.speed),
+                None => {
+                    let base = speed_ms(self.settings.speed);
+                    if self.settings.accelerate {
+                        let score = p.game.score as f64;
+                        (base - crate::settings::ACCEL_MS * score).max(crate::settings::MIN_TICK_MS.min(base))
+                    } else {
+                        base
+                    }
+                }
             },
             None => 130.0,
         }
@@ -580,13 +792,16 @@ impl App {
         self.fx.update(self.ui.dt);
         match self.screen {
             Screen::Play => {
-                self.read_controls();
+                if self.play.as_ref().is_none_or(|p| p.replay.is_none()) {
+                    self.read_controls();
+                }
                 let ms = self.tick_ms();
                 let Some(p) = self.play.as_mut() else { return };
                 if self.frozen {
                     p.acc = ms * 0.5;
                     return;
                 }
+                p.feed(); // (watching: the recorded turns, including the first one that starts it)
                 let g = p.game();
                 if p.paused || !g.started || g.over {
                     self.drain();
@@ -598,6 +813,7 @@ impl App {
                 p.acc += dt * boost;
                 while p.acc >= ms {
                     p.acc -= ms;
+                    p.feed();
                     match &mut p.run {
                         Some(r) => r.step(),
                         None => p.game.step(),
@@ -675,6 +891,9 @@ impl App {
         }
         p.reported = true;
         p.over_at = Some(now);
+        if p.replay.is_some() {
+            return; // (only watching)
+        }
         match &p.run {
             Some(r) => {
                 if r.finished {
@@ -694,8 +913,7 @@ impl App {
             }
             None => {
                 let score = p.game.score;
-                let key = format!("{}x{} {} {}", self.settings.board_w, self.settings.board_h,
-                                  catalog().mode_label(&self.settings.modes), self.settings.fruit_count);
+                let key = self.settings.best_key();
                 if score > *self.settings.best.get(&key).unwrap_or(&0) {
                     self.settings.best.insert(key, score);
                     p.new_best = score > 0;
@@ -825,17 +1043,22 @@ impl App {
                 self.ui.text(&format_time(live), w / 2.0, cy, 30.0, INK, Align::Center, true);
                 let goal = r.category.goal.map_or("Fill the board".to_string(), |g| format!("{} / {g}", r.game.score));
                 self.ui.text(&format!("{}   ·   {goal}", r.category.name), 160.0 * u, cy, 16.0, MUTED, Align::Left, false);
-                let pb = p.pb_before.map_or("--".into(), |t| format_time(t as f64));
-                let wr = self.online.records.get(&r.category.id).and_then(|w| w["time_ms"].as_f64()).map_or("--".into(), format_time);
-                self.ui.text(&format!("PB {pb}   WR {wr}"), w - 20.0 * u, cy, 16.0, MUTED, Align::Right, true);
+                if let Some(rp) = &p.replay {
+                    let label = format!("Watching {}'s world record", rp.player);
+                    let tw = self.ui.text(&label, w - 20.0 * u, cy, 16.0, C_GOLD, Align::Right, true);
+                    draw_icon("trophy", w - 34.0 * u - tw, cy, 20.0 * u, C_GOLD);
+                } else {
+                    let pb = p.pb_before.map_or("--".into(), |t| format_time(t as f64));
+                    let wr = self.online.records.get(&r.category.id).and_then(|w| w["time_ms"].as_f64()).map_or("--".into(), format_time);
+                    self.ui.text(&format!("PB {pb}   WR {wr}"), w - 20.0 * u, cy, 16.0, MUTED, Align::Right, true);
+                }
             }
             None => {
-                let key = format!("{}x{} {} {}", self.settings.board_w, self.settings.board_h,
-                                  catalog().mode_label(&self.settings.modes), self.settings.fruit_count);
+                let key = self.settings.best_key();
                 let best = *self.settings.best.get(&key).unwrap_or(&0);
                 draw_icon("trophy", 160.0 * u, cy, 24.0 * u, C_GOLD);
                 self.ui.text(&best.max(score).to_string(), 180.0 * u, cy, 24.0, C_GOLD, Align::Left, true);
-                self.ui.text(&catalog().mode_label(&self.settings.modes), w / 2.0, cy, 18.0, MUTED, Align::Center, true);
+                self.ui.text(&self.settings.play_label(), w / 2.0, cy, 18.0, MUTED, Align::Center, true);
                 let view = if self.settings.view3d { "2D view" } else { "3D view" };
                 if self.ui.button_icon(view, "cube", Rect::new(w - 150.0 * u, cy - 18.0 * u, 136.0 * u, 36.0 * u), Style::Ghost) {
                     self.settings.view3d = !self.settings.view3d;
@@ -848,9 +1071,18 @@ impl App {
             self.restart();
             return;
         }
-        // Esc leaves the game, back to where it was started from (P or Space pause)
+        // Esc pauses; Esc again (on the pause menu) quits to the main menu. Before the start and
+        // after the end, Esc goes back to where the game was started from. (P or Space pause too.)
         if self.ui.hotkey(KeyCode::Escape) {
-            self.leave_play();
+            let paused = self.play.as_ref().is_some_and(|p| p.paused);
+            if started && !over && !paused {
+                self.play.as_mut().unwrap().paused = true;
+                self.sfx.play("click");
+            } else if paused {
+                self.quit_to_menu();
+            } else {
+                self.leave_play();
+            }
             return;
         }
         if (self.ui.hotkey(KeyCode::P) || self.ui.hotkey(KeyCode::Space)) && started && !over {
@@ -863,16 +1095,16 @@ impl App {
         if !started {
             let lines = match &p.run {
                 Some(r) => vec![r.category.name.clone(), r.category.desc.clone()],
-                None => vec!["Ready?".into(), catalog().mode_label(&self.settings.modes)],
+                None => vec!["Ready?".into(), self.settings.play_label()],
             };
             self.overlay_card(&lines[0], &lines[1], "Press an arrow key (or swipe) to start  ·  Esc to go back", &[]);
         } else if p.paused {
-            if let Some(a) = self.overlay_card("Paused", "The speedrun timer only counts moves, so pausing costs nothing.", "",
-                                               &["Resume", "Restart", "Quit"]) {
+            if let Some(a) = self.overlay_card("Paused", "The speedrun timer only counts moves, so pausing costs nothing.",
+                                               "Esc again to quit to the main menu", &["Resume", "Restart", "Quit"]) {
                 match a {
                     0 => self.play.as_mut().unwrap().paused = false,
                     1 => self.restart(),
-                    _ => self.leave_play(),
+                    _ => self.quit_to_menu(),
                 }
             }
         } else if over && p.over_at.is_some_and(|t| self.ui.time - t > 0.6) {
@@ -882,6 +1114,23 @@ impl App {
 
     fn game_over_card(&mut self) {
         let p = self.play.as_ref().unwrap();
+        if let (Some(rp), Some(r)) = (&p.replay, &p.run) {
+            // the end of a world record being watched
+            let (title, sub) = if r.finished {
+                (format_time(r.elapsed), format!("World record by {}, {}", rp.player, rp.data["date"].as_str().unwrap_or("")))
+            } else {
+                ("Replay ended".to_string(), "This record was set with an older version of the rules.".to_string())
+            };
+            let extra = format!("{}: {}", r.category.name, r.category.goal_text());
+            if let Some(a) = self.overlay_card(&title, &sub, &extra, &["Watch again", "Back"]) {
+                if a == 0 {
+                    self.restart();
+                } else {
+                    self.leave_play();
+                }
+            }
+            return;
+        }
         let (title, sub, extra) = match &p.run {
             Some(r) if r.finished => {
                 let t = r.time_ms();
@@ -922,6 +1171,11 @@ impl App {
         if self.ui.hotkey(KeyCode::Enter) {
             self.restart();
         }
+    }
+
+    fn quit_to_menu(&mut self) {
+        self.play = None;
+        self.go(Screen::Menu);
     }
 
     fn leave_play(&mut self) {
@@ -1055,6 +1309,20 @@ impl App {
     // ---- popups over everything
 
     fn overlays(&mut self) {
+        if self.draft.is_some() {
+            if self.screen == Screen::Speedrun {
+                self.create_popup();
+            } else {
+                self.draft = None;
+            }
+        }
+        if self.reveal.is_none() && !self.reveal_queue.is_empty() {
+            let d = self.reveal_queue.remove(0);
+            let item = d["item"].as_str().unwrap_or("").to_string();
+            let crate_id = d["crate"].as_str().unwrap_or("").to_string();
+            let reel = crate::screens_shop::make_reel(&item, &crate_id);
+            self.reveal = Some(Reveal { data: d, started: self.ui.time, reel, crate_id });
+        }
         if self.reveal.is_some() {
             crate::screens_shop::draw_reveal(self);
         }

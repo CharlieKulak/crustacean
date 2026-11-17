@@ -11,6 +11,7 @@ fn main() {
     let out = args.get(1).cloned().unwrap_or("runs.json".into());
     let count: usize = args.get(2).and_then(|c| c.parse().ok()).unwrap_or(200);
     let catalog: Value = serde_json::from_str(include_str!("../assets/catalog.json")).unwrap();
+    let only = std::env::var("ONLY").ok();
     let mut cats: Vec<Category> = catalog["categories"]
         .as_array()
         .unwrap()
@@ -20,8 +21,12 @@ fn main() {
     let all: Vec<String> = ["wall", "portal", "cheese", "borderless", "twin", "yinyang", "key", "sokoban",
                             "poison", "dimension", "minesweeper", "statue", "light", "shield", "arrow", "magnet",
                             "gate"].iter().map(|s| s.to_string()).collect();
+    if let Some(o) = &only {
+        cats.retain(|c| o.split(',').any(|x| x == c.id));
+    }
     let mut pick = PyRandom::new(99);
-    for n in 0..12 {
+    let only_builtin = only.is_some();
+    for n in 0..if only_builtin { 0 } else { 12 } {
         // custom categories with random mixes of modes
         let mut modes: Vec<String> = Vec::new();
         for _ in 0..(1 + n % 3) {
@@ -35,7 +40,7 @@ fn main() {
         }
         let fruit = if n % 4 == 0 { "mixed" } else { "apple" };
         cats.push(Category::custom(10 + n % 5, 9 + n % 4, &modes, Some(6 + n % 5), 1 + n % 3,
-                                   100.0 + 7.5 * n as f64, fruit, ""));
+                                   100.0 + 7.5 * n as f64, fruit, "", if n % 3 == 0 { 4.0 } else { 0.0 }));
     }
     let mut runs = Vec::new();
     let mut rng = PyRandom::new(2024);

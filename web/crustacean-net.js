@@ -118,13 +118,44 @@
         return Date.now();
     }
 
+    // One game at a time: the first tab holds a lease in localStorage, renewed every
+    // second; other tabs see it's taken and wait (taking it over once it lapses).
+    const INSTANCE_KEY = "opensnake-instance";
+    const instanceId = Math.random().toString(36).slice(2) + Date.now().toString(36);
+    let otherInstance = false;
+    function instanceTick() {
+        try {
+            const now = Date.now();
+            const cur = JSON.parse(window.localStorage.getItem(INSTANCE_KEY) || "null");
+            if (!cur || cur.id === instanceId || now - cur.t > 3500) {
+                window.localStorage.setItem(INSTANCE_KEY, JSON.stringify({ id: instanceId, t: now }));
+                otherInstance = false;
+            } else {
+                otherInstance = true;
+            }
+        } catch (e) {
+            otherInstance = false; // (no storage: nothing to check against)
+        }
+    }
+    instanceTick();
+    setInterval(instanceTick, 1000);
+    window.addEventListener("pagehide", () => {
+        try {
+            const cur = JSON.parse(window.localStorage.getItem(INSTANCE_KEY) || "null");
+            if (cur && cur.id === instanceId) window.localStorage.removeItem(INSTANCE_KEY);
+        } catch (e) { }
+    });
+    function os_other_instance() {
+        return otherInstance ? 1 : 0;
+    }
+
     miniquad_add_plugin({
         register_plugin: function (importObject) {
             Object.assign(importObject.env, {
                 os_http, os_ws_open, os_ws_send, os_ws_close,
                 os_event_len, os_event_take: take,
                 os_storage_len, os_storage_take: take, os_storage_set,
-                os_pick_image, os_origin_len, os_origin_take: take, os_set_title, os_now,
+                os_pick_image, os_origin_len, os_origin_take: take, os_set_title, os_now, os_other_instance,
             });
         },
         name: "crustacean_net",

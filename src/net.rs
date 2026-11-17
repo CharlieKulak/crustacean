@@ -212,6 +212,70 @@ mod platform {
         }
     }
 
+    // ---- one game per computer
+    //
+    // The running game holds a port on this computer only (127.0.0.1) and answers on it
+    // that it's an OpenSnake game; a second one finds the port taken and asks who has it.
+
+    const INSTANCE_PORT: u16 = 47817;
+    const INSTANCE_REPLY: &str = "{\"opensnake-client\":\"crustacean\"}";
+
+    fn held() -> &'static Mutex<bool> {
+        static H: OnceLock<Mutex<bool>> = OnceLock::new();
+        H.get_or_init(|| Mutex::new(false))
+    }
+
+    /// Is another OpenSnake game running on this computer? (Claims the spot if it's free.)
+    pub fn other_instance() -> bool {
+        use std::io::{Read, Write};
+        use std::net::{SocketAddr, TcpListener};
+        let mut h = held().lock().unwrap();
+        if *h {
+            return false;
+        }
+        let addr: SocketAddr = ([127, 0, 0, 1], INSTANCE_PORT).into();
+        match TcpListener::bind(addr) {
+            Ok(listener) => {
+                *h = true;
+                std::thread::spawn(move || {
+                    for stream in listener.incoming().flatten() {
+                        let mut stream = stream;
+                        let _ = stream.set_read_timeout(Some(Duration::from_millis(500)));
+                        let mut buf = [0u8; 1024];
+                        let _ = stream.read(&mut buf);
+                        let reply = format!(
+                            "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\n\
+                             Content-Length: {}\r\nConnection: close\r\n\r\n{INSTANCE_REPLY}",
+                            INSTANCE_REPLY.len()
+                        );
+                        let _ = stream.write_all(reply.as_bytes());
+                    }
+                });
+                false
+            }
+            Err(_) => {
+                // Taken: by another OpenSnake game, or by some other program (then carry on).
+                // (asked a few times: a game that's just starting may be slow to answer)
+                for _ in 0..3 {
+                    let Ok(mut stream) = TcpStream::connect_timeout(&addr, Duration::from_millis(500)) else {
+                        continue;
+                    };
+                    let _ = stream.set_read_timeout(Some(Duration::from_millis(800)));
+                    let _ = stream.write_all(b"GET / HTTP/1.0\r\n\r\n");
+                    let mut reply = Vec::new();
+                    let _ = stream.read_to_end(&mut reply);
+                    if String::from_utf8_lossy(&reply).contains("opensnake-client") {
+                        return true;
+                    }
+                    if !reply.is_empty() {
+                        return false; // (something else answered: not ours)
+                    }
+                }
+                false
+            }
+        }
+    }
+
     /// Picking a picture needs a file dialog: on desktop, the player types the file's path.
     pub fn pick_image() {}
 
@@ -253,6 +317,12 @@ mod platform {
         fn os_origin_take(buf: *mut u8);
         fn os_set_title(t: *const u8, tl: u32);
         fn os_now() -> f64;
+        fn os_other_instance() -> i32;
+    }
+
+    /// Is another OpenSnake game open in this browser (another tab or window of this site)?
+    pub fn other_instance() -> bool {
+        unsafe { os_other_instance() != 0 }
     }
 
     /// (miniquad's loader checks the JS plugin matches this version)

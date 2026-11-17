@@ -1,6 +1,6 @@
 [package]
 name = "crustacean"
-version = "3.0.0"
+version = "3.1.0"
 edition = "2024"
 description = "Crustacean: a snake game in Rust, and a client for OpenSnake servers"
 license = "GPL-3.0-or-later"

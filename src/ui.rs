@@ -196,7 +196,8 @@ impl Ui {
 
     /// A key press that isn't going into a text box.
     pub fn hotkey(&self, k: KeyCode) -> bool {
-        self.focus.is_none() && self.key(k)
+        // (not while a popup has the input, or a text box has the keys)
+        self.input && self.focus.is_none() && self.key(k)
     }
 
     pub fn toast(&mut self, text: impl Into<String>, color: Color) {

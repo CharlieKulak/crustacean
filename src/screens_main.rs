@@ -114,6 +114,15 @@ impl App {
                 self.go(tile.to);
             }
         }
+        // today's login reward, if it's waiting
+        let ready = self.online.logged_in() && self.online.login_reward.as_ref().is_some_and(|l| l["ready"] == true);
+        if ready {
+            let day = self.online.login_reward.as_ref().and_then(|l| l["streak"].as_i64()).unwrap_or(1);
+            let pr = Rect::new(w / 2.0 - 160.0 * u, h - 74.0 * u, 320.0 * u, 42.0 * u);
+            if self.ui.button_icon(&format!("Daily reward ready: day {day}"), "gift", pr, Style::Gold) {
+                self.go(Screen::Daily);
+            }
+        }
         // badges: daily challenges ready to claim
         self.ui.text(&format!("v{}  ·  {}", crate::app::VERSION, self.online.server.trim_start_matches("https://")),
                      w / 2.0, h - 16.0 * u, 12.0, FAINT, Align::Center, false);
@@ -152,6 +161,9 @@ impl App {
     // ---- setting up a round
 
     pub fn setup_screen(&mut self) {
+        if self.fields.contains_key("sr_popup") {
+            self.ui.input = false; // (the popup is open: nothing under it reacts)
+        }
         let area = self.page("Play", "play");
         let u = self.ui.u;
         let wide = area.w > 860.0 * u;
@@ -197,15 +209,16 @@ impl App {
         // -- modes
         let modes: Vec<_> = catalog().modes.iter().filter(|m| m.id != "classic").cloned().collect();
         let cols = if w > 560.0 * u { 4 } else { 3 };
-        let rows = modes.len().div_ceil(cols);
+        let rows = (modes.len() + 1).div_ceil(cols); // (+1: Accelerate)
         let mcard = Rect::new(x, y, w, 64.0 * u + rows as f32 * 44.0 * u + 40.0 * u);
         self.ui.card(mcard);
         self.ui.text("Modes", mcard.x + 22.0 * u, mcard.y + 28.0 * u, 17.0, INK, Align::Left, true);
-        let on = self.settings.modes.len();
+        let on = self.settings.modes.len() + self.settings.accelerate as usize;
         let note = if on == 0 { "None: classic snake".to_string() } else { format!("{on} on") };
         self.ui.text(&note, mcard.x + 90.0 * u, mcard.y + 29.0 * u, 13.0, MUTED, Align::Left, false);
         if on > 0 && self.ui.button("Clear", Rect::new(mcard.x + mcard.w - 92.0 * u, mcard.y + 12.0 * u, 74.0 * u, 32.0 * u), Style::Ghost) {
             self.settings.modes.clear();
+            self.settings.accelerate = false;
         }
         let inner_w = mcard.w - 44.0 * u;
         let mw = (inner_w - (cols as f32 - 1.0) * 8.0 * u) / cols as f32;
@@ -219,6 +232,15 @@ impl App {
             if self.ui.hover(r) {
                 hovered = Some(m.desc.clone());
             }
+        }
+        // Accelerate: not a rule of the board, but the speed, so it's kept apart from the modes
+        let i = modes.len();
+        let r = Rect::new(mcard.x + 22.0 * u + (i % cols) as f32 * (mw + 8.0 * u), mcard.y + 54.0 * u + (i / cols) as f32 * 44.0 * u, mw, 36.0 * u);
+        if self.ui.chip("Accelerate", self.settings.accelerate, r, rgb(234, 120, 32)) {
+            self.settings.accelerate = !self.settings.accelerate;
+        }
+        if self.ui.hover(r) {
+            hovered = Some("Starts at your speed and gets faster with every fruit you eat.".into());
         }
         let desc = hovered.unwrap_or_else(|| "Point at a mode to see what it does. Mix as many as you like.".into());
         let desc = self.ui.fit(&desc, 13.0, false, inner_w);
@@ -235,7 +257,7 @@ impl App {
         let _ = y;
         self.ui.card(side);
         let cx = side.x + side.w / 2.0;
-        let label = self.ui.fit(&catalog().mode_label(&self.settings.modes), 22.0, true, side.w - 40.0 * u);
+        let label = self.ui.fit(&self.settings.play_label(), 22.0, true, side.w - 40.0 * u);
         let mut sy = side.y + 36.0 * u;
         if wide {
             self.ui.text(&label, cx, sy, 22.0, INK, Align::Center, true);
@@ -245,8 +267,7 @@ impl App {
                                   speed_label(self.settings.speed), self.settings.fruit_count),
                          cx, sy, 14.0, MUTED, Align::Center, false);
             sy += 40.0 * u;
-            let key = format!("{}x{} {} {}", self.settings.board_w, self.settings.board_h,
-                              catalog().mode_label(&self.settings.modes), self.settings.fruit_count);
+            let key = self.settings.best_key();
             let best = *self.settings.best.get(&key).unwrap_or(&0);
             draw_icon("trophy", cx - 46.0 * u, sy, 24.0 * u, C_GOLD);
             self.ui.text(&format!("Best {best}"), cx - 28.0 * u, sy, 19.0, C_GOLD, Align::Left, true);
@@ -270,6 +291,90 @@ impl App {
         if self.fields.contains_key("sr_popup") {
             self.speedrun_settings_popup();
         }
+    }
+
+    /// Make a community run: name it and set its rules, then share it.
+    pub fn create_popup(&mut self) {
+        let Some(mut d) = self.draft.take() else { return };
+        let u = self.ui.u;
+        let (sw, sh) = (self.ui.w, self.ui.h);
+        self.ui.input = true;
+        draw_rectangle(0.0, 0.0, sw, sh, alpha(rgb(4, 8, 12), 0.72));
+        let w = (640.0 * u).min(sw - 24.0 * u);
+        let h = (640.0 * u).min(sh - 24.0 * u);
+        let r = Rect::new((sw - w) / 2.0, (sh - h) / 2.0, w, h);
+        self.ui.card(r);
+        let x = r.x + 28.0 * u;
+        let iw = w - 56.0 * u;
+        self.ui.text("New community run", x, r.y + 34.0 * u, 22.0, INK, Align::Left, true);
+        self.ui.text("Anyone can play it from Speedrun > Community. No snake points, but the records count.",
+                     x, r.y + 60.0 * u, 12.0, MUTED, Align::Left, false);
+        let mut y = r.y + 84.0 * u;
+        self.ui.text_input("draft_name", &mut d.name, Rect::new(x, y, iw, 42.0 * u), "Name it (like Portal Panic)", false, 40);
+        y += 56.0 * u;
+        let label = |app: &mut App, t: &str, y: f32| app.ui.text(t, x, y + 20.0 * u, 15.0, INK, Align::Left, true);
+        let col = x + 112.0 * u;
+        let half = (iw - 112.0 * u - 30.0 * u) / 2.0;
+        label(self, "Board", y);
+        d.w = self.ui.stepper("draft_w", d.w, 8, 1000, Rect::new(col, y, half, 40.0 * u));
+        self.ui.text("x", col + half + 15.0 * u, y + 20.0 * u, 16.0, MUTED, Align::Center, true);
+        d.h = self.ui.stepper("draft_h", d.h, 5, 1000, Rect::new(col + half + 30.0 * u, y, half, 40.0 * u));
+        y += 52.0 * u;
+        label(self, "Fruit at once", y);
+        let max_fruit = (d.w * d.h - 4).clamp(1, 100_000);
+        d.fruit_count = self.ui.stepper("draft_fruit", d.fruit_count.min(max_fruit), 1, max_fruit, Rect::new(col, y, half, 40.0 * u));
+        y += 52.0 * u;
+        label(self, "Goal", y);
+        let fill = d.goal == 0;
+        if !fill {
+            d.goal = self.ui.stepper("draft_goal", d.goal, 1, 9999, Rect::new(col, y, half, 40.0 * u));
+        } else {
+            self.ui.text("Fill the board", col + half / 2.0, y + 20.0 * u, 15.0, MUTED, Align::Center, true);
+        }
+        if self.ui.toggle("Fill the board", fill, Rect::new(col + half + 30.0 * u, y + 2.0 * u, half, 36.0 * u)) {
+            d.goal = if fill { 20 } else { 0 };
+        }
+        y += 52.0 * u;
+        label(self, "Speed", y);
+        let sp = self.ui.slider("draft_speed", d.speed, Rect::new(col + 6.0 * u, y + 6.0 * u, half + 20.0 * u, 28.0 * u));
+        d.speed = (sp * 4.0).round() / 4.0;
+        self.ui.text(speed_label(d.speed), col + half + 40.0 * u, y + 20.0 * u, 13.0, ACCENT, Align::Left, true);
+        if self.ui.toggle("Accelerate", d.accelerate, Rect::new(col + half + 110.0 * u, y + 2.0 * u, half - 80.0 * u, 36.0 * u)) {
+            d.accelerate = !d.accelerate;
+        }
+        y += 52.0 * u;
+        label(self, "Modes", y);
+        y += 40.0 * u;
+        let modes: Vec<_> = catalog().modes.iter().filter(|m| m.id != "classic").cloned().collect();
+        let cols = 4;
+        let mw = (iw - 3.0 * 6.0 * u) / cols as f32;
+        for (i, m) in modes.iter().enumerate() {
+            let cr = Rect::new(x + (i % cols) as f32 * (mw + 6.0 * u), y + (i / cols) as f32 * 36.0 * u, mw, 30.0 * u);
+            if self.ui.chip(&m.name, d.modes.contains(&m.id), cr, C_BLUE) {
+                toggle_mode(&mut d.modes, &m.id);
+            }
+        }
+        let bw = (iw - 12.0 * u) / 2.0;
+        let by = r.y + h - 66.0 * u;
+        let busy = self.online.is_busy(&Req::Share);
+        if self.ui.button("Cancel", Rect::new(x, by, bw, 46.0 * u), Style::Secondary) || self.ui.hotkey(KeyCode::Escape) {
+            self.ui.input = false;
+            return; // (the draft is dropped)
+        }
+        if self.ui.button_icon(if busy { "Sharing..." } else { "Share it" }, "plus", Rect::new(x + bw + 12.0 * u, by, bw, 46.0 * u), Style::Primary) && !busy {
+            if d.name.trim().is_empty() {
+                self.ui.toast("Give it a name first.", C_RED);
+            } else {
+                let accel = if d.accelerate { crate::settings::ACCEL_MS } else { 0.0 };
+                let cat = Category::custom(d.w, d.h, &d.modes, Some(d.goal), d.fruit_count,
+                                           crate::settings::speed_ms(d.speed), "apple", d.name.trim(), accel);
+                self.online.post("/api/categories", serde_json::json!({"def": cat.def()}), Req::Share);
+                self.ui.input = false;
+                return; // (done: the reply shows it in the list)
+            }
+        }
+        self.ui.input = false;
+        self.draft = Some(d);
     }
 
     /// Speedrun the current settings: pick a goal. Finishing it shares it in Community.
@@ -302,8 +407,9 @@ impl App {
             self.fields.remove("sr_popup");
             let goal: i32 = self.fields.get("sr_goal").and_then(|g| g.parse().ok()).unwrap_or(20);
             let s = &self.settings;
+            let accel = if s.accelerate { crate::settings::ACCEL_MS } else { 0.0 };
             let cat = Category::custom(s.board_w, s.board_h, &s.modes, Some(goal), s.fruit_count,
-                                       crate::settings::speed_ms(s.speed), &s.fruit, "");
+                                       crate::settings::speed_ms(s.speed), &s.fruit, "", accel);
             self.settings.save();
             self.start_run(cat, Screen::Setup);
         }
@@ -313,6 +419,9 @@ impl App {
     // ---- speedruns
 
     pub fn speedrun_screen(&mut self) {
+        if self.draft.is_some() {
+            self.ui.input = false; // (the Create popup is open: nothing under it reacts)
+        }
         let area = self.page("Speedrun", "timer");
         let u = self.ui.u;
         let tab = self.tab(Screen::Speedrun);
@@ -350,8 +459,27 @@ impl App {
                 self.online.get(&path, Req::Categories);
             }
             self.fields.insert("comm_q", q);
+            let cr = Rect::new(body.x + body.w - 150.0 * u, body.y, 150.0 * u, 40.0 * u);
+            if self.ui.button_icon("Create", "plus", cr, Style::Primary) {
+                if self.online.logged_in() {
+                    let s = &self.settings;
+                    self.draft = Some(crate::app::Draft {
+                        name: String::new(), w: s.board_w, h: s.board_h, modes: s.modes.clone(),
+                        fruit_count: s.fruit_count, speed: s.speed, accelerate: s.accelerate, goal: 20,
+                    });
+                } else {
+                    self.ui.toast("Log in to make community runs.", C_RED);
+                }
+            }
+            // a run just made: show its leaderboard
+            if let Some(id) = self.online.last_shared.take() {
+                self.viewing = Some(id.clone());
+                self.online.leaderboards.remove(&id);
+                self.online.get(&format!("/api/leaderboard/{id}"), Req::Leaderboard(id));
+            }
             body = Rect::new(body.x, body.y + 54.0 * u, body.w, body.h - 54.0 * u);
         }
+
         // (community categories also have their votes)
         let mut votes: Vec<Value> = Vec::new();
         let cats: Vec<(Category, Option<Value>)> = match tab {
@@ -472,7 +600,19 @@ impl App {
                 return;
             };
             let name = cats.iter().find(|(c, _)| c.id == id).map(|(c, _)| c.name.clone()).unwrap_or_default();
-            self.ui.text(&name, side.x + 20.0 * u, side.y + 30.0 * u, 20.0, INK, Align::Left, true);
+            let has_wr = cats.iter().any(|(c, wr)| c.id == id && wr.is_some());
+            // built-in and weekly runs: watch the world record (community ones can't be watched)
+            let can_watch = tab != 2 && has_wr;
+            let name_w = side.w - 40.0 * u - if can_watch { 140.0 * u } else { 0.0 };
+            let shown = self.ui.fit(&name, 20.0, true, name_w);
+            self.ui.text(&shown, side.x + 20.0 * u, side.y + 30.0 * u, 20.0, INK, Align::Left, true);
+            if can_watch {
+                let br = Rect::new(side.x + side.w - 150.0 * u, side.y + 12.0 * u, 134.0 * u, 36.0 * u);
+                let busy = self.online.is_busy(&Req::Replay(id.clone()));
+                if self.ui.button_icon(if busy { "Loading..." } else { "Watch WR" }, "play", br, Style::Gold) && !busy {
+                    self.online.get(&format!("/api/replay/{id}"), Req::Replay(id.clone()));
+                }
+            }
             let Some(lb) = self.online.leaderboards.get(&id).cloned() else {
                 self.ui.text("Loading...", side.x + 20.0 * u, side.y + 70.0 * u, 15.0, MUTED, Align::Left, false);
                 return;

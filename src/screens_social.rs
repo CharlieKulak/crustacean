@@ -136,6 +136,9 @@ pub fn encode_b64(data: &[u8]) -> String {
 
 impl App {
     pub fn profile_screen(&mut self) {
+        if self.fields.get("view_profile").is_some_and(|s| !s.is_empty()) {
+            self.ui.input = false; // (a player's profile is open on top: nothing under it reacts)
+        }
         let area = self.page("Profile", "user");
         let u = self.ui.u;
         if !self.online.logged_in() {
@@ -638,6 +641,9 @@ impl App {
     // ---- the community leaderboard
 
     pub fn leaderboard_screen(&mut self) {
+        if self.fields.get("view_profile").is_some_and(|s| !s.is_empty()) {
+            self.ui.input = false; // (a player's profile is open on top: nothing under it reacts)
+        }
         let area = self.page("Leaderboard", "trophy");
         let u = self.ui.u;
         let Some(d) = self.online.rankings.clone() else {

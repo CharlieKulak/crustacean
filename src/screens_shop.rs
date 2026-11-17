@@ -57,13 +57,19 @@ pub fn crate_art(r: Rect, c: Color, now: f64) {
 /// The strip of items a loot box spins through, landing on what you won.
 pub fn make_reel(item: &str, crate_id: &str) -> Vec<String> {
     let cat = catalog();
-    let odds = cat.crates.iter().find(|c| c.id == crate_id).map(|c| c.odds.clone()).unwrap_or_default();
-    let pass_only: std::collections::HashSet<String> =
-        cat.skins.iter().filter(|s| s.series == "Pass" || s.series == "Ranked").map(|s| format!("skin:{}", s.id)).collect();
-    let pool: Vec<String> = cat.skins.iter().map(|s| format!("skin:{}", s.id))
-        .chain(cat.packs.iter().map(|p| format!("pack:{}", p.id)))
-        .filter(|i| !pass_only.contains(i))
-        .collect();
+    let crate_ = cat.crates.iter().find(|c| c.id == crate_id);
+    let odds = crate_.map(|c| c.odds.clone()).unwrap_or_default();
+    let series = crate_.map(|c| c.series.clone()).unwrap_or_default();
+    // what this crate can give: a themed crate's own series, or else the usual pool
+    let themed: std::collections::HashSet<String> = cat.crates.iter().filter(|c| !c.series.is_empty()).map(|c| c.series.clone()).collect();
+    let pool: Vec<String> = if series.is_empty() {
+        cat.skins.iter().filter(|s| s.series != "Pass" && s.series != "Ranked" && !themed.contains(&s.series))
+            .map(|s| format!("skin:{}", s.id))
+            .chain(cat.packs.iter().map(|p| format!("pack:{}", p.id)))
+            .collect()
+    } else {
+        cat.skins.iter().filter(|s| s.series == series).map(|s| format!("skin:{}", s.id)).collect()
+    };
     let mut reel = Vec::new();
     for _ in 0..48 {
         let roll = rand::gen_range(0.0, 100.0f64);
@@ -194,17 +200,17 @@ fn rand_offset(item: &str) -> f64 {
 
 impl App {
     pub fn store_screen(&mut self) {
-        if self.reveal.is_some() {
-            self.ui.input = false;
+        if self.reveal.is_some() || self.selling.is_some() || self.trade_draft.is_some() || self.jackpot_anim.is_some() {
+            self.ui.input = false; // (a popup is open: nothing under it reacts)
         }
         let area = self.page("Store", "cart");
         let u = self.ui.u;
         let tab = self.tab(Screen::Store);
-        let tw = (560.0 * u).min(area.w);
-        if let Some(t) = self.ui.tabs(&["Shop", "Loot boxes", "Market", "Collection"], tab, Rect::new(area.x, area.y, tw, 44.0 * u)) {
+        let tw = (900.0 * u).min(area.w);
+        if let Some(t) = self.ui.tabs(&["Shop", "Loot boxes", "Market", "Trades", "Jackpot", "Collection", "Index"], tab, Rect::new(area.x, area.y, tw, 44.0 * u)) {
             self.set_tab(Screen::Store, t);
         }
-        for (k, i) in [(KeyCode::Key1, 0), (KeyCode::Key2, 1), (KeyCode::Key3, 2), (KeyCode::Key4, 3)] {
+        for (k, i) in [(KeyCode::Key1, 0), (KeyCode::Key2, 1), (KeyCode::Key3, 2), (KeyCode::Key4, 3), (KeyCode::Key5, 4), (KeyCode::Key6, 5), (KeyCode::Key7, 6)] {
             if self.ui.hotkey(k) {
                 self.set_tab(Screen::Store, i);
             }
@@ -217,10 +223,19 @@ impl App {
             0 => self.shop(body),
             1 => self.crates(body),
             2 => self.market(body),
-            _ => self.collection(body),
+            3 => self.trades(body),
+            4 => self.jackpot(body),
+            5 => self.collection(body),
+            _ => self.index(body),
         }
         if self.selling.is_some() {
             self.sell_popup();
+        }
+        if self.trade_draft.is_some() {
+            self.trade_popup();
+        }
+        if self.jackpot_anim.is_some() {
+            self.jackpot_draw();
         }
     }
 
@@ -691,8 +706,11 @@ impl App {
         };
         let w = area.w.min(820.0 * u);
         let x = area.x + (area.w - w) / 2.0;
-        self.ui.text(&format!("New challenges in {}", d["left"].as_str().unwrap_or("")), x, area.y + 14.0 * u, 16.0, MUTED, Align::Left, false);
-        let mut y = area.y + 40.0 * u;
+        let off = self.ui.begin_scroll("daily", area, 690.0 * u);
+        let mut y = area.y - off;
+        y = self.login_reward_card(x, y, w) + 16.0 * u;
+        self.ui.text(&format!("Challenges: new ones in {}", d["left"].as_str().unwrap_or("")), x, y + 14.0 * u, 16.0, MUTED, Align::Left, false);
+        y += 40.0 * u;
         let colors = [ACCENT, C_BLUE, C_PURPLE];
         for (i, c) in d["challenges"].as_array().cloned().unwrap_or_default().iter().enumerate() {
             let r = Rect::new(x, y, w, 110.0 * u);
@@ -735,5 +753,407 @@ impl App {
         } else {
             draw_icon("lock", br.x + br.w / 2.0, br.y + br.h / 2.0, 22.0 * u, FAINT);
         }
+        self.ui.end_scroll();
+    }
+
+    /// The daily login reward: seven days, better each day in a row. Returns where it ends.
+    pub fn login_reward_card(&mut self, x: f32, y: f32, w: f32) -> f32 {
+        let u = self.ui.u;
+        let Some(lr) = self.online.login_reward.clone() else {
+            self.online.get("/api/login-reward", Req::LoginReward);
+            return y;
+        };
+        let r = Rect::new(x, y, w, 236.0 * u);
+        self.ui.card(r);
+        let ready = lr["ready"] == true;
+        let streak = lr["streak"].as_i64().unwrap_or(1);
+        let step = lr["step"].as_i64().unwrap_or(0) as usize;
+        let rewards: Vec<String> = lr["rewards"].as_array().map(|a| a.iter().filter_map(|x| x.as_str().map(String::from)).collect()).unwrap_or_default();
+        let milestones: Vec<(usize, String)> = lr["milestones"].as_array().map(|a| a.iter()
+            .map(|m| (m["day"].as_u64().unwrap_or(0) as usize, m["reward"].as_str().unwrap_or("").to_string())).collect()).unwrap_or_default();
+        let n = rewards.len().max(1);
+        self.ui.text("Daily login reward", r.x + 22.0 * u, r.y + 26.0 * u, 18.0, INK, Align::Left, true);
+        let note = if ready { format!("Day {} of {n}: claim it!", step + 1) } else { format!("Day {} of {n} claimed. Come back tomorrow for the next.", step + 1) };
+        self.ui.text(&note, r.x + 210.0 * u, r.y + 27.0 * u, 13.0, if ready { ACCENT } else { MUTED }, Align::Left, false);
+        if streak > n as i64 {
+            self.ui.text(&format!("{streak} days in a row"), r.x + r.w - 22.0 * u, r.y + 27.0 * u, 13.0, C_GOLD, Align::Right, true);
+        }
+        // a week of days around today
+        let shown = 7.min(n);
+        let first = step.saturating_sub(1).min(n - shown);
+        let gap = 8.0 * u;
+        let bw_ = (r.w - 44.0 * u - 200.0 * u - gap * (shown as f32 - 1.0)) / shown as f32;
+        for k in 0..shown {
+            let i = first + k;
+            let name = &rewards[i];
+            let b = Rect::new(r.x + 22.0 * u + k as f32 * (bw_ + gap), r.y + 50.0 * u, bw_, 92.0 * u);
+            let done = i < step || (i == step && !ready);
+            let today = i == step;
+            let big = milestones.iter().any(|(d, _)| *d == i + 1);
+            rounded(b, 10.0 * u, if today { mix(CARD_HI, C_GOLD, 0.18) } else if big { mix(CARD_HI, C_PURPLE, 0.14) } else { CARD_HI });
+            if today {
+                rounded_outline(b, 10.0 * u, 2.0, if ready { C_GOLD } else { ACCENT });
+            } else if big {
+                rounded_outline(b, 10.0 * u, 1.5, alpha(C_PURPLE, 0.7));
+            }
+            self.ui.text(&format!("Day {}", i + 1), b.x + b.w / 2.0, b.y + 16.0 * u, 11.0, if big { C_PURPLE } else { MUTED }, Align::Center, true);
+            reward_art(name, Rect::new(b.x, b.y + 24.0 * u, b.w, 36.0 * u), self.now_ms());
+            let label = short_reward(name);
+            let label = self.ui.fit(&label, 12.0, true, b.w - 6.0 * u);
+            self.ui.text(&label, b.x + b.w / 2.0, b.y + 76.0 * u, 12.0, INK, Align::Center, true);
+            if done {
+                draw_circle(b.x + b.w - 12.0 * u, b.y + 12.0 * u, 9.0 * u, ACCENT);
+                draw_icon("check", b.x + b.w - 12.0 * u, b.y + 12.0 * u, 12.0 * u, rgb(8, 30, 16));
+            }
+        }
+        let br = Rect::new(r.x + r.w - 196.0 * u, r.y + 70.0 * u, 176.0 * u, 50.0 * u);
+        let busy = self.online.is_busy(&Req::ClaimLogin);
+        if ready {
+            if self.ui.button_icon("Claim", "gift", br, Style::Gold) && !busy && self.reveal.is_none() {
+                self.online.post("/api/login-reward/claim", json!({}), Req::ClaimLogin);
+            }
+        } else {
+            self.ui.text("See you tomorrow", br.x + br.w / 2.0, br.y + br.h / 2.0, 14.0, MUTED, Align::Center, true);
+        }
+        // the whole ladder: how far along it you are, and its big days
+        let ty = r.y + 160.0 * u;
+        let (tx, tw) = (r.x + 22.0 * u, r.w - 44.0 * u);
+        let at = |day: usize| tx + tw * (day as f32 - 1.0) / (n as f32 - 1.0).max(1.0);
+        let reached = if ready { step } else { step + 1 };
+        rounded(Rect::new(tx, ty - 3.0 * u, tw, 6.0 * u), 3.0 * u, CARD_HI);
+        if reached > 0 {
+            rounded(Rect::new(tx, ty - 3.0 * u, (at(reached) - tx).max(6.0 * u), 6.0 * u), 3.0 * u, ACCENT);
+        }
+        for (day, _) in &milestones {
+            draw_circle(at(*day), ty, 5.0 * u, if *day <= reached { ACCENT } else { C_PURPLE });
+        }
+        draw_circle(at(step + 1), ty, 7.0 * u, if ready { C_GOLD } else { ACCENT });
+        let k = milestones.len().max(1) as f32;
+        let pg = 8.0 * u;
+        let pw = (tw - pg * (k - 1.0)) / k;
+        for (j, (day, reward)) in milestones.iter().enumerate() {
+            let pr = Rect::new(tx + j as f32 * (pw + pg), ty + 14.0 * u, pw, 30.0 * u);
+            let got = *day <= reached;
+            let col = if got { ACCENT } else { C_PURPLE };
+            rounded(pr, 15.0 * u, mix(CARD_HI, col, 0.12));
+            rounded_outline(pr, 15.0 * u, 1.0, alpha(col, 0.6));
+            let text = self.ui.fit(&format!("Day {day}: {}", short_reward(reward)), 12.0, true, pw - 16.0 * u);
+            self.ui.text(&text, pr.x + pr.w / 2.0, pr.y + pr.h / 2.0, 12.0, if got { ACCENT } else { INK }, Align::Center, true);
+        }
+        if let Some((day, reward)) = milestones.iter().find(|(d, _)| *d > step + 1) {
+            let left = day - (step + 1);
+            let text = format!("Next big one: {reward} on day {day}, {left} day{} away. Missing a day starts again from day 1.",
+                               if left == 1 { "" } else { "s" });
+            let text = self.ui.fit(&text, 12.0, false, r.w - 44.0 * u);
+            self.ui.text(&text, r.x + 22.0 * u, r.y + r.h - 14.0 * u, 12.0, MUTED, Align::Left, false);
+        }
+        r.y + r.h
+    }
+}
+
+/// A login reward, short enough for a day's box: "2 Royal", "250,000".
+fn short_reward(name: &str) -> String {
+    name.split(" + ").map(|part| {
+        let part = part.replace(" snake points", "").replace(" Crates", "").replace(" Crate", "");
+        match part.replace(',', "").parse::<i64>() {
+            Ok(n) if n >= 1_000_000 && n % 100_000 == 0 => format!("{}M", n as f64 / 1e6),
+            Ok(n) if n >= 10_000 && n % 1_000 == 0 => format!("{}k", n / 1_000),
+            _ => part,
+        }
+    }).collect::<Vec<_>>().join(" + ")
+}
+
+/// A login reward's picture: its (best) loot box, or a coin.
+fn reward_art(name: &str, r: Rect, now: f64) {
+    let cat = catalog();
+    let best = cat.crates.iter().filter(|c| name.contains(c.name.trim_end_matches(" Crate"))).max_by_key(|c| c.price);
+    match best {
+        Some(c) => crate_art(r, rgbt(hex(&c.color)), now),
+        None => draw_icon("coin", r.x + r.w / 2.0, r.y + r.h / 2.0, 24.0 * r.h / 36.0, C_GOLD),
+    }
+}
+
+/// What's in one side of a trade, as words: "Galaxy, Snowflake + 5,000 points".
+fn trade_side(items: &Value, points: &Value) -> String {
+    let cat = catalog();
+    let mut parts: Vec<String> = items.as_array().map(|a| a.iter().filter_map(|i| i.as_str()).map(|i| cat.item_name(i)).collect())
+        .unwrap_or_default();
+    let p = points.as_i64().unwrap_or(0);
+    if p > 0 {
+        parts.push(format!("{} points", format_points(p)));
+    }
+    if parts.is_empty() { "nothing".into() } else { parts.join(", ") }
+}
+
+/// How a skin or pack is got (for the Index).
+pub fn how_to_get(item: &str) -> String {
+    let cat = catalog();
+    if let Some(price) = cat.item_price(item) {
+        return format!("Shop: {}", format_points(price));
+    }
+    if let Some(sk) = item.strip_prefix("skin:").and_then(|k| cat.skin(k)) {
+        if sk.series == "Pass" {
+            return "Battle pass only".into();
+        }
+        if sk.series == "Ranked" {
+            let rank = cat.ranks.iter().find(|r| r.rewards.iter().any(|w| *w == sk.name)).map(|r| r.name.clone());
+            return rank.map_or("Ranked reward".into(), |r| format!("Reach {r}"));
+        }
+        if let Some(c) = cat.crates.iter().find(|c| !c.series.is_empty() && c.series == sk.series) {
+            return format!("{} only", c.name);
+        }
+    }
+    let rarity = cat.item_rarity(item);
+    if rarity == "legendary" || rarity == "mythic" { "Loot boxes (Royal Crate too)".into() } else { "Loot boxes".into() }
+}
+
+impl App {
+    // ---- trading with other players
+
+    fn trades(&mut self, body: Rect) {
+        let u = self.ui.u;
+        self.ui.text("Swap skins and packs (and snake points) with any player. Ranked skins can't be traded.",
+                     body.x, body.y + 18.0 * u, 14.0, MUTED, Align::Left, false);
+        if self.ui.button_icon("New trade", "plus", Rect::new(body.x + body.w - 170.0 * u, body.y, 160.0 * u, 40.0 * u), Style::Primary) {
+            self.trade_draft = Some(crate::app::TradeDraft::default());
+            self.online.their_items = None;
+        }
+        let list = Rect::new(body.x, body.y + 54.0 * u, body.w, body.h - 54.0 * u);
+        let Some(t) = self.online.trades.clone() else {
+            self.loading(list);
+            return;
+        };
+        let get = |k: &str| t[k].as_array().cloned().unwrap_or_default();
+        let (incoming, outgoing, history) = (get("incoming"), get("outgoing"), get("history"));
+        let row = 84.0 * u;
+        let total = (incoming.len() + outgoing.len() + history.len()) as f32 * (row + 8.0 * u) + 3.0 * 40.0 * u;
+        let off = self.ui.begin_scroll("trades", list, total);
+        let mut y = list.y - off;
+        if incoming.is_empty() && outgoing.is_empty() && history.is_empty() {
+            self.ui.text("No trades yet. Start one with New trade.", list.x + list.w / 2.0, y + 60.0 * u, 17.0, MUTED, Align::Center, false);
+        }
+        for (title, rows, kind) in [("Offered to you", &incoming, 0), ("Your offers", &outgoing, 1), ("Recent", &history, 2)] {
+            if rows.is_empty() {
+                continue;
+            }
+            self.ui.text(title, list.x, y + 16.0 * u, 17.0, INK, Align::Left, true);
+            y += 36.0 * u;
+            for tr in rows.iter() {
+                let r = Rect::new(list.x, y, list.w - 12.0 * u, row);
+                y += row + 8.0 * u;
+                if !self.ui.visible(r) {
+                    continue;
+                }
+                rounded(r, 12.0 * u, if kind == 2 { alpha(CARD, 0.6) } else { CARD });
+                let (from, to) = (tr["from"].as_str().unwrap_or("?"), tr["to"].as_str().unwrap_or("?"));
+                let give = trade_side(&tr["give"], &tr["give_points"]);
+                let want = trade_side(&tr["want"], &tr["want_points"]);
+                let tw = r.w - 300.0 * u;
+                let (l1, l2) = match kind {
+                    0 => (format!("{from} gives you: {give}"), format!("You give {from}: {want}")),
+                    1 => (format!("You give {to}: {give}"), format!("{to} gives you: {want}")),
+                    _ => (format!("{from} > {to}: {give}"), format!("{to} > {from}: {want}")),
+                };
+                let l1 = self.ui.fit(&l1, 15.0, true, tw);
+                let l2 = self.ui.fit(&l2, 15.0, false, tw);
+                self.ui.text(&l1, r.x + 18.0 * u, r.y + 28.0 * u, 15.0, if kind == 0 { ACCENT } else { INK }, Align::Left, true);
+                self.ui.text(&l2, r.x + 18.0 * u, r.y + 56.0 * u, 15.0, MUTED, Align::Left, false);
+                let id = tr["id"].clone();
+                let bx = r.x + r.w - 270.0 * u;
+                match kind {
+                    0 => {
+                        if self.ui.button("Accept", Rect::new(bx, r.y + 20.0 * u, 124.0 * u, 44.0 * u), Style::Primary) {
+                            self.online.post("/api/trades/answer", json!({"id": id, "action": "accept"}), Req::AnswerTrade);
+                        }
+                        if self.ui.button("Decline", Rect::new(bx + 134.0 * u, r.y + 20.0 * u, 120.0 * u, 44.0 * u), Style::Secondary) {
+                            self.online.post("/api/trades/answer", json!({"id": id, "action": "decline"}), Req::AnswerTrade);
+                        }
+                    }
+                    1 => {
+                        if self.ui.button("Cancel offer", Rect::new(bx + 74.0 * u, r.y + 20.0 * u, 180.0 * u, 44.0 * u), Style::Secondary) {
+                            self.online.post("/api/trades/answer", json!({"id": id, "action": "cancel"}), Req::AnswerTrade);
+                        }
+                    }
+                    _ => {
+                        let st = tr["status"].as_str().unwrap_or("");
+                        let col = if st == "accepted" { ACCENT } else { FAINT };
+                        let label = format!("{}{}", st[..1.min(st.len())].to_uppercase(), &st[1.min(st.len())..]);
+                        self.ui.text(&label, r.x + r.w - 24.0 * u, r.y + r.h / 2.0, 14.0, col, Align::Right, true);
+                    }
+                }
+            }
+            y += 12.0 * u;
+        }
+        self.ui.end_scroll();
+    }
+
+    /// Put a trade together: pick a player, what you give and what you want.
+    fn trade_popup(&mut self) {
+        let Some(mut d) = self.trade_draft.take() else { return };
+        let u = self.ui.u;
+        let (sw, sh) = (self.ui.w, self.ui.h);
+        self.ui.input = true;
+        draw_rectangle(0.0, 0.0, sw, sh, alpha(rgb(4, 8, 12), 0.72));
+        let w = (900.0 * u).min(sw - 24.0 * u);
+        let h = (620.0 * u).min(sh - 24.0 * u);
+        let r = Rect::new((sw - w) / 2.0, (sh - h) / 2.0, w, h);
+        self.ui.card(r);
+        let x = r.x + 26.0 * u;
+        let iw = w - 52.0 * u;
+        self.ui.text("New trade", x, r.y + 32.0 * u, 22.0, INK, Align::Left, true);
+        // who with
+        let mut name = d.to.clone();
+        let entered = self.ui.text_input("trade_to", &mut name, Rect::new(x, r.y + 56.0 * u, iw - 150.0 * u, 42.0 * u), "Player's name", false, 20);
+        let load = self.ui.button("Find", Rect::new(x + iw - 138.0 * u, r.y + 56.0 * u, 138.0 * u, 42.0 * u), Style::Secondary);
+        if (load || entered) && !name.trim().is_empty() {
+            self.online.get(&format!("/api/users/{}/items", crate::online::urlencode(name.trim())), Req::UserItems(name.trim().to_string()));
+        }
+        if name != d.to {
+            d.want.clear(); // (another player: their items aren't these)
+        }
+        d.to = name;
+        let theirs_loaded = self.online.their_items.as_ref().filter(|(n, _)| n.eq_ignore_ascii_case(d.to.trim())).cloned();
+        // the two sides
+        let top = r.y + 114.0 * u;
+        let col_w = (iw - 20.0 * u) / 2.0;
+        let bottom = r.y + h - 80.0 * u;
+        let cat = catalog();
+        let mine: Vec<(String, i64)> = {
+            let me = self.online.me.clone().unwrap_or_default();
+            let mut v: Vec<(String, i64)> = me["counts"].as_object().map(|m| m.iter().map(|(k, v)| (k.clone(), v.as_i64().unwrap_or(1))).collect())
+                .unwrap_or_default();
+            v.retain(|(it, n)| *n > 0 && !cat.untradeable.contains(it));
+            v.sort_by_key(|(it, _)| (std::cmp::Reverse(cat.rarity_index(&cat.item_rarity(it))), cat.item_name(it)));
+            v
+        };
+        let theirs: Vec<(String, i64)> = theirs_loaded.as_ref().map(|(_, m)| {
+            let mut v: Vec<(String, i64)> = m.as_object().map(|o| o.iter().map(|(k, v)| (k.clone(), v.as_i64().unwrap_or(1))).collect()).unwrap_or_default();
+            v.sort_by_key(|(it, _)| (std::cmp::Reverse(cat.rarity_index(&cat.item_rarity(it))), cat.item_name(it)));
+            v
+        }).unwrap_or_default();
+        let my_points = self.online.points() as i32;
+        for side in 0..2 {
+            let cx = x + side as f32 * (col_w + 20.0 * u);
+            let title = if side == 0 { "You give".to_string() } else { format!("You get{}", if d.to.trim().is_empty() { String::new() } else { format!(" from {}", d.to.trim()) }) };
+            self.ui.text(&title, cx, top + 12.0 * u, 16.0, INK, Align::Left, true);
+            let area = Rect::new(cx, top + 30.0 * u, col_w, bottom - top - 90.0 * u);
+            rounded(area, 10.0 * u, alpha(BLACK, 0.18));
+            let items = if side == 0 { &mine } else { &theirs };
+            let picked = if side == 0 { &mut d.give } else { &mut d.want };
+            if side == 1 && theirs_loaded.is_none() {
+                self.ui.text("Type a name and press Find", area.x + area.w / 2.0, area.y + area.h / 2.0, 14.0, MUTED, Align::Center, false);
+            } else if items.is_empty() {
+                self.ui.text("Nothing to trade", area.x + area.w / 2.0, area.y + area.h / 2.0, 14.0, MUTED, Align::Center, false);
+            }
+            let chip_h = 34.0 * u;
+            let cols = 2;
+            let cw = (area.w - 24.0 * u - 8.0 * u) / cols as f32;
+            let off = self.ui.begin_scroll(&format!("trade_side{side}"), area, items.len().div_ceil(cols) as f32 * (chip_h + 6.0 * u) + 20.0 * u);
+            for (i, (it, n)) in items.iter().enumerate() {
+                let cr = Rect::new(area.x + 8.0 * u + (i % cols) as f32 * (cw + 8.0 * u), area.y + 8.0 * u + (i / cols) as f32 * (chip_h + 6.0 * u) - off, cw, chip_h);
+                if !self.ui.visible(cr) {
+                    continue;
+                }
+                let label = if *n > 1 { format!("{} x{n}", cat.item_name(it)) } else { cat.item_name(it) };
+                let col = rgbt(cat.rarity_color(&cat.item_rarity(it)));
+                let on = picked.contains(it);
+                if self.ui.chip(&label, on, cr, col) {
+                    if on {
+                        picked.retain(|p| p != it);
+                    } else if picked.len() < 12 {
+                        picked.push(it.clone());
+                    }
+                }
+            }
+            self.ui.end_scroll();
+            // points on this side
+            let py = area.y + area.h + 12.0 * u;
+            self.ui.text("+ points", cx, py + 20.0 * u, 14.0, MUTED, Align::Left, true);
+            let pts = if side == 0 { &mut d.give_points } else { &mut d.want_points };
+            let max = if side == 0 { my_points.max(0) } else { 10_000_000 };
+            *pts = self.ui.stepper(&format!("trade_points{side}"), (*pts).min(max), 0, max, Rect::new(cx + 80.0 * u, py, col_w - 80.0 * u, 40.0 * u));
+        }
+        let bw = (iw - 12.0 * u) / 2.0;
+        let by = r.y + h - 64.0 * u;
+        if self.ui.button("Cancel", Rect::new(x, by, bw, 46.0 * u), Style::Secondary) || self.ui.hotkey(KeyCode::Escape) {
+            self.ui.input = false;
+            return;
+        }
+        let busy = self.online.is_busy(&Req::OfferTrade);
+        if self.ui.button_icon(if busy { "Sending..." } else { "Offer trade" }, "market", Rect::new(x + bw + 12.0 * u, by, bw, 46.0 * u), Style::Primary) && !busy {
+            if d.to.trim().is_empty() {
+                self.ui.toast("Who's it with? Type a player's name.", C_RED);
+            } else if (d.give.is_empty() && d.give_points == 0) || (d.want.is_empty() && d.want_points == 0) {
+                self.ui.toast("Put something on both sides.", C_RED);
+            } else {
+                self.online.post("/api/trades", json!({"to": d.to.trim(), "give": d.give, "give_points": d.give_points,
+                                                       "want": d.want, "want_points": d.want_points}), Req::OfferTrade);
+            }
+        }
+        self.ui.input = false;
+        self.trade_draft = Some(d); // (closed when the offer's sent)
+    }
+
+    // ---- the index of every skin and pack
+
+    fn index(&mut self, body: Rect) {
+        let u = self.ui.u;
+        let cat = catalog();
+        let mut items: Vec<String> = cat.skins.iter().map(|s| format!("skin:{}", s.id)).chain(cat.packs.iter().map(|p| format!("pack:{}", p.id))).collect();
+        items.sort_by_key(|i| (cat.rarity_index(&cat.item_rarity(i)), i.starts_with("pack:"), cat.item_name(i)));
+        let owned_n = items.iter().filter(|i| self.online.owns(i)).count();
+        // search and filter
+        let mut q = self.fields.remove("index_q").unwrap_or_default();
+        self.ui.text_input("index_q", &mut q, Rect::new(body.x, body.y, 260.0 * u, 40.0 * u), "Search by name, series or rarity", false, 30);
+        let filter = self.fields.get("index_f").cloned().unwrap_or_else(|| "all".into());
+        let mut fx = body.x + 272.0 * u;
+        for (key, label) in [("all", "All"), ("owned", "Owned"), ("missing", "Missing")] {
+            let w = self.ui.measure(label, 13.0, true) + 28.0 * u;
+            if self.ui.chip(label, filter == key, Rect::new(fx, body.y + 4.0 * u, w, 32.0 * u), ACCENT) {
+                self.fields.insert("index_f", key.into());
+            }
+            fx += w + 6.0 * u;
+        }
+        if self.online.logged_in() {
+            self.ui.text(&format!("You have {owned_n} of {}", items.len()), body.x + body.w - 10.0 * u, body.y + 20.0 * u, 15.0, MUTED, Align::Right, true);
+        }
+        let filter = self.fields.get("index_f").cloned().unwrap_or_else(|| "all".into());
+        let words: Vec<String> = q.to_lowercase().split_whitespace().map(String::from).collect();
+        items.retain(|it| {
+            let owned = self.online.owns(it);
+            let series = it.strip_prefix("skin:").and_then(|k| cat.skin(k)).map(|s| s.series.clone()).unwrap_or_default();
+            let text = format!("{} {} {} {}", cat.item_name(it), series, cat.rarity_name(&cat.item_rarity(it)), how_to_get(it)).to_lowercase();
+            (filter == "all" || (filter == "owned") == owned) && words.iter().all(|w| text.contains(w))
+        });
+        self.fields.insert("index_q", q);
+        let grid = Rect::new(body.x, body.y + 54.0 * u, body.w, body.h - 54.0 * u);
+        let card_h = 214.0;
+        let (cols, cw, gap, total) = self.grid(grid, items.len(), 190.0, card_h);
+        let off = self.ui.begin_scroll("index", grid, total);
+        for (i, item) in items.iter().enumerate() {
+            let r = Rect::new(grid.x + (i % cols) as f32 * (cw + gap), grid.y + (i / cols) as f32 * (card_h * u + gap) - off, cw, card_h * u);
+            if !self.ui.visible(r) {
+                continue;
+            }
+            self.item_card(r, item);
+            let how = self.ui.fit(&how_to_get(item), 12.0, false, r.w - 28.0 * u);
+            self.ui.text(&how, r.x + 14.0 * u, r.y + 182.0 * u, 12.0, MUTED, Align::Left, false);
+            if self.online.logged_in() {
+                if self.online.owns(item) {
+                    let c = self.online.copies(item);
+                    draw_circle(r.x + r.w - 20.0 * u, r.y + 22.0 * u, 11.0 * u, ACCENT);
+                    draw_icon("check", r.x + r.w - 20.0 * u, r.y + 22.0 * u, 13.0 * u, rgb(8, 30, 16));
+                    if c > 1 {
+                        self.ui.text(&format!("x{c}"), r.x + r.w - 36.0 * u, r.y + 22.0 * u, 12.0, ACCENT, Align::Right, true);
+                    }
+                } else {
+                    rounded(r, 14.0 * u, alpha(BG_BOTTOM, 0.35)); // (not yours yet: a little faded)
+                }
+            }
+        }
+        if items.is_empty() {
+            self.ui.text("Nothing matches.", grid.x + grid.w / 2.0, grid.y + 60.0 * u, 17.0, MUTED, Align::Center, false);
+        }
+        self.ui.end_scroll();
     }
 }

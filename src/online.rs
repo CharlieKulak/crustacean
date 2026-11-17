@@ -24,6 +24,7 @@ pub enum Req {
     Round,
     Weekly,
     Categories,
+    Share,
     Vote(String),
     Rename,
     Rankings,
@@ -49,6 +50,15 @@ pub enum Req {
     SendDm,
     Matches,
     GetPicture(String),
+    LoginReward,
+    ClaimLogin,
+    Trades,
+    OfferTrade,
+    AnswerTrade,
+    UserItems(String),
+    Replay(String),
+    Jackpot,
+    JackpotEnter,
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -63,6 +73,7 @@ pub enum Tone {
 pub enum Notice {
     Say(String, Tone),
     CrateOpened(Value),
+    JackpotEntered,
     RunResult(Value),
     Reward(Value),
     MatchStarted,
@@ -72,6 +83,10 @@ pub enum Notice {
     Invite(Value),
     Dm(Value),
     Sound(&'static str),
+    /// A world record run to watch: {player, time_ms, date, run}
+    Replay(Value),
+    /// A trade offer finished sending
+    TradeSent,
 }
 
 /// A versus match being played (the server runs it; we draw it and predict our turns).
@@ -106,6 +121,17 @@ pub struct Online {
     pub community: Option<Value>,
     /// The last community search asked for ("/api/categories?q=...&sort=...").
     pub community_path: String,
+    /// Today's login reward ({ready, streak, step, rewards})
+    pub login_reward: Option<Value>,
+    /// Trades: {incoming, outgoing, history}
+    pub trades: Option<Value>,
+    /// The jackpot pot, and when it was fetched (for its countdown).
+    pub jackpot: Option<Value>,
+    pub jackpot_at: f64,
+    /// Another player's tradeable items: (their name, {item: copies})
+    pub their_items: Option<(String, Value)>,
+    /// The community category just made (or found), to show it.
+    pub last_shared: Option<String>,
     pub rankings: Option<Value>,
     pub pass: Option<Value>,
     pub market: Option<Value>,
@@ -148,6 +174,12 @@ impl Online {
             weekly: None,
             community: None,
             community_path: String::new(),
+            login_reward: None,
+            trades: None,
+            jackpot: None,
+            jackpot_at: 0.0,
+            their_items: None,
+            last_shared: None,
             rankings: None,
             pass: None,
             market: None,
@@ -413,10 +445,26 @@ impl Online {
                     }
                 }
             }
+            Req::Share => {
+                if ok {
+                    let name = d["name"].as_str().unwrap_or("it").to_string();
+                    if d["new"] == true {
+                        self.say(format!("{name} is in Community now."), Tone::Good);
+                        self.notices.push(Notice::Sound("coin"));
+                    } else {
+                        let by = d["creator"].as_str().unwrap_or("someone");
+                        self.say(format!("Those rules are already a community run: {name}, by {by}."), Tone::Info);
+                    }
+                    self.last_shared = d["id"].as_str().map(String::from);
+                    self.community_path.clear(); // (ask for the list again)
+                } else {
+                    self.say(err, Tone::Bad);
+                }
+            }
             Req::Rename => {
                 if ok {
                     self.say("Renamed.", Tone::Good);
-                    self.get("/api/categories", Req::Categories);
+                    self.community_path.clear(); // (ask for the list again)
                 } else {
                     self.say(err, Tone::Bad);
                 }
@@ -546,6 +594,84 @@ impl Online {
                 }
             }
             Req::Matches => self.matches = ok.then_some(d),
+            Req::LoginReward => self.login_reward = ok.then_some(d),
+            Req::ClaimLogin => {
+                if ok {
+                    self.login_reward = Some(json!({"ready": false, "streak": d["streak"], "step": d["step"],
+                                                    "rewards": d["rewards"], "milestones": d["milestones"]}));
+                    self.say(format!("Day {} reward: {}", d["streak"], d["reward"].as_str().unwrap_or("")), Tone::Good);
+                    let opened = d["opened"].as_array().cloned().unwrap_or_default();
+                    if opened.is_empty() {
+                        self.notices.push(Notice::Sound("coin"));
+                    }
+                    for o in opened {  // (each loot box is shown opening, one after another)
+                        self.notices.push(Notice::CrateOpened(o));
+                    }
+                    self.refresh_me();
+                } else {
+                    self.say(err, Tone::Bad);
+                }
+            }
+            Req::Trades => self.trades = ok.then_some(d),
+            Req::Jackpot => {
+                if ok {
+                    self.jackpot = Some(d);
+                    self.jackpot_at = macroquad::time::get_time();
+                }
+            }
+            Req::JackpotEnter => {
+                if ok {
+                    self.jackpot = Some(d);
+                    self.jackpot_at = macroquad::time::get_time();
+                    self.say("You're in the pot. Good luck!", Tone::Good);
+                    self.notices.push(Notice::Sound("coin"));
+                    self.notices.push(Notice::JackpotEntered);
+                    self.refresh_me();
+                } else {
+                    self.say(err, Tone::Bad);
+                }
+            }
+            Req::OfferTrade => {
+                if ok {
+                    let to = d["to"].as_str().unwrap_or("them").to_string();
+                    self.say(format!("Trade offer sent to {to}."), Tone::Good);
+                    self.notices.push(Notice::TradeSent);
+                    self.get("/api/trades", Req::Trades);
+                } else {
+                    self.say(err, Tone::Bad);
+                }
+            }
+            Req::AnswerTrade => {
+                if ok {
+                    let msg = match d["status"].as_str() {
+                        Some("accepted") => "Trade done!",
+                        Some("declined") => "Trade declined.",
+                        _ => "Trade cancelled.",
+                    };
+                    self.say(msg, Tone::Good);
+                    if d["status"] == "accepted" {
+                        self.notices.push(Notice::Sound("coin"));
+                    }
+                    self.refresh_me();
+                } else {
+                    self.say(err, Tone::Bad);
+                }
+                self.get("/api/trades", Req::Trades);
+            }
+            Req::UserItems(name) => {
+                if ok {
+                    self.their_items = Some((d["name"].as_str().unwrap_or(&name).to_string(), d["items"].clone()));
+                } else {
+                    self.say(err, Tone::Bad);
+                }
+            }
+            Req::Replay(_) => {
+                if ok {
+                    self.notices.push(Notice::Replay(d));
+                } else {
+                    self.say(err, Tone::Bad);
+                }
+            }
             Req::GetPicture(name) => {
                 let png = d["png"].as_str().map(String::from);
                 self.pictures.insert(name, png.or(Some(String::new())));
@@ -739,6 +865,31 @@ impl Online {
                 }
                 self.chats = None;
                 self.notices.push(Notice::Dm(m));
+            }
+            "trade" => {
+                let from = m["from"].as_str().unwrap_or("Someone").to_string();
+                let text = match m["status"].as_str() {
+                    Some("accepted") => format!("{from} accepted your trade!"),
+                    Some("declined") => format!("{from} declined your trade."),
+                    Some(_) => format!("{from} cancelled a trade."),
+                    None => format!("{from} offered you a trade: see Store > Trades."),
+                };
+                self.say(text, Tone::Info);
+                self.notices.push(Notice::Sound("unlock"));
+                self.get("/api/trades", Req::Trades);
+                if m["status"] == "accepted" {
+                    self.refresh_me();
+                }
+            }
+            "jackpot" => {
+                let text = if m["you_won"] == true {
+                    format!("You won the jackpot: {} snake points of skins!", crate::cosmetics::format_points(m["total"].as_i64().unwrap_or(0)))
+                } else {
+                    format!("{} won the jackpot.", m["winner"].as_str().unwrap_or("Someone"))
+                };
+                self.say(text, if m["you_won"] == true { Tone::Good } else { Tone::Info });
+                self.get("/api/jackpot", Req::Jackpot);
+                self.refresh_me();
             }
             "sold" => {
                 let name = m["name"].as_str().unwrap_or("something").to_string();

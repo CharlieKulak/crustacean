@@ -51,7 +51,7 @@ fn recorded_runs_replay_exactly() {
         if cat.custom {
             // (the id is a hash of the rules: it has to come out the same)
             let again = Category::custom(cat.w, cat.h, &cat.modes, cat.goal, cat.fruit_count, cat.tick_ms,
-                                         &cat.fruit, "");
+                                         &cat.fruit, "", cat.accel);
             assert_eq!(again.id, id, "custom id for {}", cat.rules_json());
         }
         let inputs: Vec<(i64, Dir)> = r["inputs"]
@@ -128,4 +128,31 @@ fn recorded_runs_replay_exactly() {
         }
     }
     assert!(failures.is_empty(), "{} of {} runs differ:\n{}", failures.len(), runs.len(), failures.join("\n"));
+}
+
+/// Watching a run (the game's own loop: recorded turns fed in as their moves come up, with
+/// `plan` locking turns in half way through a cell) must end exactly where the record did.
+#[test]
+fn watching_a_run_ends_where_it_did() {
+    for r in golden()["runs"].as_array().unwrap() {
+        let id = r["id"].as_str().unwrap();
+        let cat = category(&r["category"], id);
+        let inputs: Vec<(i64, Dir)> = r["inputs"].as_array().unwrap().iter()
+            .map(|i| (i[0].as_i64().unwrap(), Dir::parse(i[1].as_str().unwrap()).unwrap())).collect();
+        let mut run = Run::new(cat, r["seed"].as_i64().unwrap());
+        let mut next = 0;
+        for _ in 0..200_000 {
+            while next < inputs.len() && inputs[next].0 <= run.game.tick {
+                run.input(inputs[next].1);
+                next += 1;
+            }
+            if run.game.over || !run.game.started {
+                break;
+            }
+            run.game.plan();
+            run.step();
+        }
+        assert_eq!(run.elapsed, r["elapsed"].as_f64().unwrap(), "{id}");
+        assert_eq!(run.finished, r["finished"].as_bool().unwrap(), "{id}");
+    }
 }

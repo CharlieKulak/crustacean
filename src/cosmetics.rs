@@ -59,6 +59,9 @@ pub struct Crate {
     pub price: i64,
     pub color: String,
     pub odds: HashMap<String, f64>,
+    /// A themed crate gives only this series' skins (the Holiday Crate); "" for the usual pool.
+    #[serde(default)]
+    pub series: String,
 }
 
 #[derive(Deserialize, Clone, Debug)]
@@ -341,6 +344,11 @@ pub fn skin_color(skin: &Skin, i: usize, n: usize, now: f64) -> Rgb {
             let base = lerp(c[0], c[1], 0.3 + 0.3 * (fi * 0.8 + now / 300.0).sin());
             let on = hash01(i as i64, (now / 90.0).floor() as i64) > 0.88;
             lerp(base, c[2], if on { 1.0 } else { 0.0 })
+        }
+        "lights" => {
+            // a string of coloured bulbs, twinkling on and off
+            let bulb = c[i % c.len()];
+            if hash01(i as i64, (now / 450.0).floor() as i64) > 0.25 { bulb } else { lerp(bulb, (24, 24, 30), 0.65) }
         }
         _ => c[0],
     }

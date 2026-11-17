@@ -1,5 +1,5 @@
 {
- "version": "3.0.0",
+ "version": "3.1.0",
  "skins": [
   {
    "id": "mint",
@@ -1783,6 +1783,210 @@
    "glow": true,
    "price": null,
    "series": "Ranked"
+  },
+  {
+   "id": "cranberry",
+   "name": "Cranberry Sauce",
+   "rarity": "uncommon",
+   "pattern": "grad",
+   "colors": [
+    "#9b1b30",
+    "#e0435c"
+   ],
+   "outline": "#5e0f1d",
+   "glow": false,
+   "price": null,
+   "series": "Holiday"
+  },
+  {
+   "id": "pumpkinpie",
+   "name": "Pumpkin Pie",
+   "rarity": "rare",
+   "pattern": "stripes",
+   "colors": [
+    "#d9772b",
+    "#d9772b",
+    "#f6e3c2"
+   ],
+   "outline": "#8a4a1c",
+   "glow": false,
+   "price": null,
+   "series": "Holiday"
+  },
+  {
+   "id": "roastturkey",
+   "name": "Roast Turkey",
+   "rarity": "rare",
+   "pattern": "grad",
+   "colors": [
+    "#7a3f14",
+    "#d98b3a"
+   ],
+   "outline": "#4a250b",
+   "glow": false,
+   "price": null,
+   "series": "Holiday"
+  },
+  {
+   "id": "cornbread",
+   "name": "Cornbread",
+   "rarity": "uncommon",
+   "pattern": "grad",
+   "colors": [
+    "#e8b83a",
+    "#fbe7a1"
+   ],
+   "outline": "#9c7414",
+   "glow": false,
+   "price": null,
+   "series": "Holiday"
+  },
+  {
+   "id": "autumnleaves",
+   "name": "Autumn Leaves",
+   "rarity": "epic",
+   "pattern": "flow",
+   "colors": [
+    "#b5371a",
+    "#e8771f",
+    "#f2b632",
+    "#7a4a1c"
+   ],
+   "outline": null,
+   "glow": false,
+   "price": null,
+   "series": "Holiday"
+  },
+  {
+   "id": "harvestmoon",
+   "name": "Harvest Moon",
+   "rarity": "epic",
+   "pattern": "pulse",
+   "colors": [
+    "#2a1606",
+    "#ff9a2e"
+   ],
+   "outline": "#ffcf7a",
+   "glow": true,
+   "price": null,
+   "series": "Holiday"
+  },
+  {
+   "id": "cornucopia",
+   "name": "Cornucopia",
+   "rarity": "legendary",
+   "pattern": "shimmer",
+   "colors": [
+    "#a8601c",
+    "#ffd36b"
+   ],
+   "outline": "#ffe9b0",
+   "glow": true,
+   "price": null,
+   "series": "Holiday"
+  },
+  {
+   "id": "peppermint",
+   "name": "Peppermint",
+   "rarity": "uncommon",
+   "pattern": "stripes",
+   "colors": [
+    "#e3222f",
+    "#fafafa"
+   ],
+   "outline": "#a3101a",
+   "glow": false,
+   "price": null,
+   "series": "Holiday"
+  },
+  {
+   "id": "gingerbread",
+   "name": "Gingerbread",
+   "rarity": "rare",
+   "pattern": "stripes",
+   "colors": [
+    "#9a5b2a",
+    "#9a5b2a",
+    "#fff6ea"
+   ],
+   "outline": "#5c3415",
+   "glow": false,
+   "price": null,
+   "series": "Holiday"
+  },
+  {
+   "id": "mistletoe",
+   "name": "Mistletoe",
+   "rarity": "rare",
+   "pattern": "grad",
+   "colors": [
+    "#1f7a3a",
+    "#4fbf6a"
+   ],
+   "outline": "#d0263a",
+   "glow": false,
+   "price": null,
+   "series": "Holiday"
+  },
+  {
+   "id": "snowflake",
+   "name": "Snowflake",
+   "rarity": "epic",
+   "pattern": "shimmer",
+   "colors": [
+    "#9fd4ff",
+    "#ffffff"
+   ],
+   "outline": "#e8f6ff",
+   "glow": true,
+   "price": null,
+   "series": "Holiday"
+  },
+  {
+   "id": "christmaslights",
+   "name": "Christmas Lights",
+   "rarity": "legendary",
+   "pattern": "lights",
+   "colors": [
+    "#e8202a",
+    "#2fbf4a",
+    "#ffc62a",
+    "#2a7bf2"
+   ],
+   "outline": "#1d3b1f",
+   "glow": true,
+   "price": null,
+   "series": "Holiday"
+  },
+  {
+   "id": "northpole",
+   "name": "North Pole",
+   "rarity": "legendary",
+   "pattern": "stripes",
+   "colors": [
+    "#e3222f",
+    "#fafafa"
+   ],
+   "outline": "#ffd54f",
+   "glow": true,
+   "price": null,
+   "series": "Holiday"
+  },
+  {
+   "id": "santassleigh",
+   "name": "Santa's Sleigh",
+   "rarity": "mythic",
+   "pattern": "lights",
+   "colors": [
+    "#d81b2a",
+    "#ffffff",
+    "#ffd54f",
+    "#1f8a3a"
+   ],
+   "outline": "#ffd54f",
+   "glow": true,
+   "price": null,
+   "series": "Holiday"
   }
  ],
  "packs": [
@@ -1976,7 +2180,8 @@
     "epic": 1.6,
     "legendary": 0.35,
     "mythic": 0.05
-   }
+   },
+   "series": ""
   },
   {
    "id": "silver",
@@ -1990,7 +2195,8 @@
     "epic": 6,
     "legendary": 1.7,
     "mythic": 0.3
-   }
+   },
+   "series": ""
   },
   {
    "id": "gold",
@@ -2004,7 +2210,8 @@
     "epic": 18,
     "legendary": 6,
     "mythic": 1
-   }
+   },
+   "series": ""
   },
   {
    "id": "diamond",
@@ -2017,7 +2224,8 @@
     "epic": 35,
     "legendary": 16,
     "mythic": 4
-   }
+   },
+   "series": ""
   },
   {
    "id": "royal",
@@ -2027,7 +2235,22 @@
    "odds": {
     "legendary": 85,
     "mythic": 15
-   }
+   },
+   "series": ""
+  },
+  {
+   "id": "holiday",
+   "name": "Holiday Crate",
+   "price": 40000,
+   "color": "#c8222c",
+   "odds": {
+    "uncommon": 26,
+    "rare": 36,
+    "epic": 24,
+    "legendary": 11,
+    "mythic": 3
+   },
+   "series": "Holiday"
   }
  ],
  "rarities": [
@@ -2487,8 +2710,8 @@
    "fruit_count": 1,
    "tick_ms": 170.0,
    "fruit": "apple",
-   "desc": "Starts slow, gets faster with every apple. Eat 30.",
    "accel": 4,
+   "desc": "Starts slow, gets faster with every apple. Eat 30.",
    "min_tick_ms": 45
   },
   {
@@ -2595,8 +2818,8 @@
    "fruit_count": 1,
    "tick_ms": 150.0,
    "fruit": "apple",
-   "desc": "Accelerate, but harder: faster sooner, down to top speed. Eat 40.",
    "accel": 5,
+   "desc": "Accelerate, but harder: faster sooner, down to top speed. Eat 40.",
    "min_tick_ms": 40
   },
   {
@@ -2849,6 +3072,16 @@
   "market_fee": 0.05,
   "market_min": 100,
   "market_max": 10000000,
-  "daily_bonus": 20000
+  "daily_bonus": 20000,
+  "rarity_value": {
+   "common": 500,
+   "uncommon": 2000,
+   "rare": 8000,
+   "epic": 30000,
+   "legendary": 120000,
+   "mythic": 400000
+  },
+  "jackpot_countdown": 45,
+  "jackpot_max_items": 20
  }
 }

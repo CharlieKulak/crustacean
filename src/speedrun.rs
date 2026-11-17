@@ -67,10 +67,11 @@ impl Category {
         }
     }
 
-    /// A custom category from its rules (goal 0 or None = fill the board).
+    /// A custom category from its rules (goal 0 or None = fill the board; accel: ms faster per
+    /// fruit eaten, for Accelerate, or 0).
     #[allow(clippy::too_many_arguments)]
     pub fn custom(w: i32, h: i32, modes: &[String], goal: Option<i32>, fruit_count: i32, tick_ms: f64,
-                  fruit: &str, name: &str) -> Category {
+                  fruit: &str, name: &str, accel: f64) -> Category {
         let mut modes: Vec<String> = modes.to_vec();
         modes.sort();
         let goal = goal.filter(|g| *g != 0);
@@ -85,7 +86,7 @@ impl Category {
             goal,
             fruit_count,
             tick_ms,
-            accel: 0.0,
+            accel: (accel.clamp(0.0, 50.0) * 10.0).round_ties_even() / 10.0,
             min_tick_ms: 45.0,
             fruit: fruit.into(),
             custom: true,
@@ -100,8 +101,10 @@ impl Category {
     pub fn rules_json(&self) -> String {
         let modes: Vec<String> = self.modes.iter().map(|m| serde_json::to_string(m).unwrap()).collect();
         let goal = self.goal.map_or("null".to_string(), |g| g.to_string());
+        // (Accelerate is only in the rules when it's on, like the server's: other ids stay the same)
+        let accel = if self.accel > 0.0 { format!("\"accel\":{},", py_float(self.accel)) } else { String::new() };
         format!(
-            "{{\"fruit\":{},\"fruit_count\":{},\"goal\":{},\"h\":{},\"modes\":[{}],\"tick_ms\":{},\"w\":{}}}",
+            "{{{accel}\"fruit\":{},\"fruit_count\":{},\"goal\":{},\"h\":{},\"modes\":[{}],\"tick_ms\":{},\"w\":{}}}",
             serde_json::to_string(&self.fruit).unwrap(),
             self.fruit_count,
             goal,
@@ -114,8 +117,12 @@ impl Category {
 
     /// The rules as saved in run files (`category_def` in Python).
     pub fn def(&self) -> Value {
-        json!({"id": self.id, "name": self.name, "w": self.w, "h": self.h, "modes": self.modes,
-               "goal": self.goal, "fruit_count": self.fruit_count, "tick_ms": self.tick_ms, "fruit": self.fruit})
+        let mut d = json!({"id": self.id, "name": self.name, "w": self.w, "h": self.h, "modes": self.modes,
+                           "goal": self.goal, "fruit_count": self.fruit_count, "tick_ms": self.tick_ms, "fruit": self.fruit});
+        if self.accel > 0.0 {
+            d["accel"] = json!(self.accel);
+        }
+        d
     }
 
     pub fn from_def(d: &Value) -> Option<Category> {
@@ -130,6 +137,7 @@ impl Category {
             d.get("tick_ms")?.as_f64()?,
             d.get("fruit").and_then(|f| f.as_str()).unwrap_or("apple"),
             d.get("name").and_then(|n| n.as_str()).unwrap_or(""),
+            d.get("accel").and_then(|a| a.as_f64()).unwrap_or(0.0),
         );
         if !(5..=1000).contains(&c.w) || !(5..=1000).contains(&c.h) || c.tick_ms <= 0.0 || c.fruit_count < 1 {
             return None;
