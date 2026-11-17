@@ -1103,7 +1103,8 @@ impl App {
     fn index(&mut self, body: Rect) {
         let u = self.ui.u;
         let cat = catalog();
-        let mut items: Vec<String> = cat.skins.iter().map(|s| format!("skin:{}", s.id)).chain(cat.packs.iter().map(|p| format!("pack:{}", p.id))).collect();
+        // (one-off gift skins aren't listed: nobody can get them)
+        let mut items: Vec<String> = cat.skins.iter().filter(|s| s.series != "Gift").map(|s| format!("skin:{}", s.id)).chain(cat.packs.iter().map(|p| format!("pack:{}", p.id))).collect();
         items.sort_by_key(|i| (cat.rarity_index(&cat.item_rarity(i)), i.starts_with("pack:"), cat.item_name(i)));
         let owned_n = items.iter().filter(|i| self.online.owns(i)).count();
         // search and filter
