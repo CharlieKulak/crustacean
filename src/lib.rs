@@ -2,7 +2,9 @@
 
 pub mod app;
 pub mod audio;
+pub mod bots;
 pub mod cosmetics;
+pub mod duel;
 pub mod game;
 pub mod net;
 pub mod online;

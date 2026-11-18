@@ -61,6 +61,10 @@ pub enum Req {
     JackpotEnter,
     Story,
     StoryRun,
+    DuelStart,
+    DuelFinish,
+    Presence,
+    PresenceAnswer,
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -81,6 +85,10 @@ pub enum Notice {
     MatchStarted,
     DuelStarted,
     DuelOver(Value),
+    /// A boss duel to play on this computer: {token, seed, boss}.
+    LocalDuel(Value),
+    /// Kicked by the server (didn't answer "Are you still here?").
+    Kicked(String),
     MatchOver(Value),
     Lobby,
     LeftMatch,
@@ -178,6 +186,8 @@ pub struct Online {
     pub duel: Option<DuelInfo>,
     /// Story mode: the chapters with your stars (from the server, or the catalogue when logged out).
     pub story: Option<Value>,
+    /// "Are you still here?": the check to answer ({code, choices, seconds}) and when it came.
+    pub presence: Option<(Value, f64)>,
     pub ping_ms: Option<f64>,
     last_ping: f64,
     last_hello: f64,
@@ -226,6 +236,7 @@ impl Online {
             game: None,
             duel: None,
             story: None,
+            presence: None,
             ping_ms: None,
             last_ping: 0.0,
             last_hello: -1e9,
@@ -439,6 +450,40 @@ impl Online {
             Req::Leaderboard(cat) => {
                 if ok {
                     self.leaderboards.insert(cat, d);
+                }
+            }
+            Req::DuelStart => {
+                if ok {
+                    self.notices.push(Notice::LocalDuel(d));
+                } else {
+                    self.say(err, Tone::Bad);
+                }
+            }
+            Req::DuelFinish => {
+                let res = if ok { d } else { json!({"won": false, "message": err}) };
+                if let Some(du) = self.duel.as_mut() {
+                    du.result = Some(res.clone());
+                }
+                if let Some(m) = res["message"].as_str() {
+                    self.say(m.to_string(), Tone::Bad);
+                }
+                if res["won"] == true {
+                    self.refresh_me();
+                }
+                self.get("/api/story", Req::Story);
+                self.notices.push(Notice::DuelOver(res));
+            }
+            Req::Presence => {
+                if ok {
+                    self.presence = if d["check"].is_object() { Some((d["check"].clone(), macroquad::time::get_time())) } else { None };
+                }
+            }
+            Req::PresenceAnswer => {
+                if ok && d["ok"] == true {
+                    self.presence = None;
+                    self.say("Thanks! Carry on.", Tone::Good);
+                } else {
+                    self.say(d["message"].as_str().unwrap_or("Try again.").to_string(), Tone::Bad);
                 }
             }
             Req::Story => {
@@ -814,11 +859,12 @@ impl Online {
         self.duel = None;
     }
 
-    /// Fight a story boss (the server checks it's unlocked).
+    /// Fight a story boss: the server hands out the duel's seed (checking it's unlocked), and
+    /// the game plays it here, then sends it back to be checked.
     pub fn start_duel(&mut self, boss: usize) {
         self.game = None;
         self.duel = None;
-        self.send(json!({"t": "duel", "boss": boss}));
+        self.post("/api/story/duel/start", json!({"boss": boss}), Req::DuelStart);
     }
 
     pub fn is_host(&self) -> bool {
@@ -831,6 +877,15 @@ impl Online {
     fn on_message(&mut self, m: Value, now_ms: f64) {
         match m["t"].as_str().unwrap_or("") {
             "welcome" => self.my_id = m["id"].as_i64(),
+            "presence" => self.get("/api/presence", Req::Presence),
+            "kicked" => {
+                self.game = None;
+                self.duel = None;
+                self.room = None;
+                self.presence = None;
+                self.notices.push(Notice::Kicked(m["message"].as_str().unwrap_or("You were kicked.").to_string()));
+                self.refresh_me();
+            }
             "duel_start" => {
                 let sides = m["state"]["sides"].as_array().cloned().unwrap_or_default();
                 let battle = m["mode"] == "battle";
@@ -1045,6 +1100,36 @@ impl Online {
         self.send(json!({"t": "input", "d": d.name(), "step": step}));
         true
     }
+}
+
+/// What to draw for an online board: your own snake one move further on, the way it's going.
+/// The server's newest state is already a move old by the time it's drawn (and the drawing
+/// goes from the move before to it), so this shows your snake about where the server has it.
+pub fn ahead_view(g: &Game, you: usize) -> Game {
+    let mut v = g.clone();
+    let Some(s) = g.snakes.get(you) else { return v };
+    if s.dead || g.over || !g.started || s.body.is_empty() {
+        return v;
+    }
+    let d = s.planned.unwrap_or(s.dir);
+    let (dx, dy) = d.delta();
+    let (mut x, mut y) = (s.body[0].x + dx, s.body[0].y + dy);
+    if g.has("borderless") {
+        x = x.rem_euclid(g.w);
+        y = y.rem_euclid(g.h);
+    } else if !g.in_bounds(x, y) {
+        return v; // (about to hit the edge: the server will say)
+    }
+    let mut body = s.body.clone();
+    body.insert(0, crate::game::Seg { x, y, hole: false });
+    body.pop();
+    if v.prev.len() > you {
+        v.prev[you] = s.body.iter().map(|p| (p.x, p.y)).collect();
+    }
+    v.snakes[you].body = body;
+    v.snakes[you].dir = d;
+    v.snakes[you].planned = None;
+    v
 }
 
 /// A duel side's state onto a board: the usual state, plus its arrow tiles.

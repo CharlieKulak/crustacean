@@ -763,8 +763,10 @@ impl App {
         let shake_you = self.duel_fx.shake[0];
         let mt = self.online.game.as_ref().unwrap();
         let du = self.online.duel.as_ref().unwrap();
+        // (online, your own board is drawn a move ahead: where the server has it by now)
+        let mine_ahead = if battle { crate::online::ahead_view(&mt.game, 0) } else { mt.game.clone() };
         for side in 0..n {
-            let g: &Game = if side == you { &mt.game } else { &du.boards[side] };
+            let g: &Game = if side == you { &mine_ahead } else { &du.boards[side] };
             let st = &sides[side];
             let shown;
             let game = if st["fog"].as_i64().unwrap_or(0) > 0 {
@@ -784,13 +786,14 @@ impl App {
                 a.x += rand::gen_range(-1.0, 1.0) * shake_you * 14.0 * u;
                 a.y += rand::gen_range(-1.0, 1.0) * shake_you * 14.0 * u;
             }
-            if self.settings.view3d && n <= 2 {
+            let board = if self.settings.view3d && n <= 2 {
                 draw_board3d(&view, a, &self.fx);
+                a
             } else {
-                draw_board(&view, a, &crate::render::Effects::default());
-            }
+                draw_board(&view, a, &crate::render::Effects::default()).0
+            };
             if st["out"] == true || (g.over && !battle && side != you) {
-                rounded(a, 12.0 * u, alpha(BLACK, 0.55));
+                rounded(board, 6.0 * u, alpha(BLACK, 0.55));
                 self.ui.text("OUT", a.x + a.w / 2.0, a.y + a.h / 2.0, 34.0, alpha(WHITE, 0.85), Align::Center, true);
             }
             if battle && side == you {
@@ -942,13 +945,19 @@ impl App {
             self.ui.text(tip, w / 2.0, h / 2.0 + 90.0 * u, 16.0, INK, Align::Center, true);
         }
         if leave {
+            self.local_duel = None; // (giving up a duel played here: nothing to send)
             self.online.leave_match();
             self.go(if battle { Screen::Online } else { Screen::Story });
             return;
         }
         // the end
         let result = self.online.duel.as_ref().and_then(|d| d.result.clone());
-        let Some(res) = result else { return };
+        let Some(res) = result else {
+            if self.local_duel.as_ref().is_some_and(|l| l.duel.over) {
+                self.ui.text("Checking the duel with the server...", w / 2.0, h / 2.0, 22.0, INK, Align::Center, true);
+            }
+            return;
+        };
         if self.reveal.is_some() {
             return; // (the loot first)
         }
@@ -989,6 +998,7 @@ impl App {
             let again = (won && i == 1) || (!won && i == 0);
             self.online.game = None;
             self.online.duel = None;
+            self.local_duel = None;
             if again {
                 self.online.start_duel(boss_num);
             } else {

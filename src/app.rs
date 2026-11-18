@@ -90,6 +90,17 @@ impl PlayState {
     }
 }
 
+/// A boss duel played on this computer (the server checks it afterwards from its seed and turns).
+pub struct LocalDuel {
+    pub duel: crate::duel::Duel,
+    pub token: String,
+    pub inputs: Vec<(i64, Dir)>,
+    pub acc: f64,
+    /// When the 3-2-1 ends (ui time).
+    pub start_at: f64,
+    pub sent: bool,
+}
+
 /// The loot box opening (or a battle pass reward) being shown.
 pub struct Reveal {
     pub data: Value,
@@ -130,6 +141,13 @@ pub struct App {
     /// Story mode: the level or boss whose card is open ("s1-03", "boss-1").
     pub story_pick: Option<String>,
     pub duel_fx: crate::screens_story::DuelFx,
+    pub local_duel: Option<LocalDuel>,
+    /// (screenshots and tests only: a bot plays your side of a local duel)
+    pub autopilot: Option<crate::pyrandom::PyRandom>,
+    /// When we last asked the server "is there an Are you still here?" for us.
+    pub presence_poll: f64,
+    /// Kicked for not answering it: the message to show.
+    pub kicked: Option<String>,
     pub jackpot_seen: Option<i64>,
     pub jackpot_anim: Option<(Value, f64)>,
     /// Another OpenSnake game is running on this computer: wait for it to close.
@@ -215,6 +233,10 @@ impl App {
             jackpot_pick: Vec::new(),
             story_pick: None,
             duel_fx: Default::default(),
+            local_duel: None,
+            autopilot: None,
+            presence_poll: -100.0,
+            kicked: None,
             jackpot_seen: None,
             jackpot_anim: None,
             blocked,
@@ -376,6 +398,18 @@ impl App {
                     self.online.send(serde_json::json!({"t": "start"}));
                 }
                 (Screen::Lobby, 0)
+            }
+            "presence" => {
+                self.online.presence = Some((serde_json::json!({"code": 482, "choices": [317, 482, 905, 263], "seconds": 20}), get_time()));
+                self.presence_poll = f64::MAX; // (no asking the server: it has no check for us)
+                self.settings.modes = Vec::new();
+                self.start_round();
+                return;
+            }
+            "duelbot" => {
+                self.autopilot = Some(crate::pyrandom::PyRandom::new(5));
+                self.online.start_duel(1);
+                (Screen::Story, 0)
             }
             "duel" => {
                 self.online.start_duel(1);
@@ -649,6 +683,32 @@ impl App {
                     self.fx = Effects::default();
                     self.go(Screen::Versus);
                 }
+                Notice::LocalDuel(d) => {
+                    let num = d["boss"].as_u64().unwrap_or(1) as usize;
+                    if let Some(boss) = crate::duel::BossDef::from_catalog(num) {
+                        let duel = crate::duel::Duel::new(boss, d["seed"].as_i64().unwrap_or(0));
+                        let mine = duel.sides[0].game.clone();
+                        let theirs = duel.sides[1].game.clone();
+                        self.online.game = Some(crate::online::Match { game: mine, you: 0, tick_ms: duel.tick_ms(), countdown: Some(3),
+                                                                       result: None, reward: None, pending: Vec::new(), acc: 0.0 });
+                        self.online.duel = Some(crate::online::DuelInfo { boss: num, you: 0, boards: vec![duel.sides[0].game.clone(), theirs],
+                                                                          players: Vec::new(), sides: Value::Array(vec![duel.side_extras(0), duel.side_extras(1)]),
+                                                                          next_signature: duel.next_signature, sudden: false, events: Vec::new(),
+                                                                          result: None });
+                        self.local_duel = Some(LocalDuel { duel, token: d["token"].as_str().unwrap_or("").to_string(), inputs: Vec::new(),
+                                                           acc: 0.0, start_at: self.ui.time + 3.0, sent: false });
+                        self.fx = Effects::default();
+                        self.duel_fx = crate::screens_story::DuelFx::default();
+                        self.go(Screen::Duel);
+                    }
+                }
+                Notice::Kicked(msg) => {
+                    self.play = None;
+                    self.local_duel = None;
+                    self.go(Screen::Menu);
+                    self.kicked = Some(msg);
+                    self.sfx.play("die");
+                }
                 Notice::DuelStarted => {
                     self.fx = Effects::default();
                     self.duel_fx = crate::screens_story::DuelFx::default();
@@ -813,6 +873,21 @@ impl App {
                     self.sfx.play("turn");
                 }
             }
+            Screen::Duel if self.local_duel.is_some() => {
+                if self.online.presence.is_some() {
+                    return;
+                }
+                let ld = self.local_duel.as_mut().unwrap();
+                if ld.duel.over || !ld.duel.sides[0].game.started {
+                    return;
+                }
+                let before = ld.duel.sides[0].game.snakes[0].queue.len();
+                ld.inputs.push((ld.duel.tick, d));
+                ld.duel.you().input_for(0, d);
+                if ld.duel.sides[0].game.snakes[0].queue.len() > before {
+                    self.sfx.play("turn");
+                }
+            }
             Screen::Versus | Screen::Duel => {
                 let now = self.now_ms();
                 if self.online.turn(d, now) {
@@ -864,6 +939,17 @@ impl App {
     fn update(&mut self) {
         let dt = self.ui.dt as f64 * 1000.0;
         self.fx.update(self.ui.dt);
+        // "Are you still here?": ask the server now and then while playing
+        let playing = matches!(self.screen, Screen::Play | Screen::Versus | Screen::Duel | Screen::Lobby);
+        if playing && self.online.logged_in() && self.ui.time - self.presence_poll > 30.0 {
+            self.presence_poll = self.ui.time;
+            self.online.get("/api/presence", Req::Presence);
+        }
+        if self.online.presence.is_some() {
+            if let Some(p) = self.play.as_mut() {
+                p.paused = true; // (the game waits for an answer)
+            }
+        }
         match self.screen {
             Screen::Play => {
                 if self.play.as_ref().is_none_or(|p| p.replay.is_none()) {
@@ -899,6 +985,11 @@ impl App {
                 if p.acc >= ms / 2.0 {
                     p.game_mut().plan(); // the head is entering its cell: lock the turn so it can curve
                 }
+                self.drain();
+            }
+            Screen::Duel if self.local_duel.is_some() => {
+                self.read_controls();
+                self.local_duel_update(dt);
                 self.drain();
             }
             Screen::Versus | Screen::Duel => {
@@ -1315,7 +1406,9 @@ impl App {
             self.go(if self.online.room.is_some() { Screen::Lobby } else { Screen::Online });
             return;
         };
-        let g = &mt.game;
+        // (your own snake is drawn a move ahead: where the server has it by now)
+        let ahead = crate::online::ahead_view(&mt.game, mt.you);
+        let g = &ahead;
         let t = if g.over { 1.0 } else { (mt.acc / mt.tick_ms) as f32 };
         let hud_h = 64.0 * u;
         let area = Rect::new(16.0 * u, hud_h + 12.0 * u, w - 32.0 * u, h - hud_h - 28.0 * u);
@@ -1396,6 +1489,109 @@ impl App {
 
     // ---- popups over everything
 
+    /// Run a boss duel played here: the 3-2-1, the moves, and what the duel screen draws.
+    fn local_duel_update(&mut self, dt: f64) {
+        let now = self.ui.time;
+        let paused = self.online.presence.is_some();
+        let Some(ld) = self.local_duel.as_mut() else { return };
+        let mut events = Vec::new();
+        let mut your_events = Vec::new();
+        let countdown = if now < ld.start_at { Some((ld.start_at - now).ceil() as i64) } else { None };
+        if countdown.is_none() && !ld.duel.sides[0].game.started {
+            ld.duel.start();
+            self.sfx.play("start");
+        }
+        if countdown.is_none() && !ld.duel.over && !paused {
+            ld.acc += dt;
+            loop {
+                let ms = ld.duel.tick_ms();
+                if ld.acc < ms || ld.duel.over {
+                    break;
+                }
+                ld.acc -= ms;
+                if let Some(rng) = self.autopilot.as_mut() {
+                    if let Some(d) = crate::bots::choose(&ld.duel.sides[0].game, 0, rng, "hard") {
+                        ld.inputs.push((ld.duel.tick, d));
+                        ld.duel.you().input_for(0, d);
+                    }
+                }
+                ld.duel.step();
+                events.extend(ld.duel.events.drain(..));
+                your_events.extend(ld.duel.sides[0].game.events.drain(..));
+                ld.duel.sides[1].game.events.clear();
+            }
+            if ld.acc >= ld.duel.tick_ms() / 2.0 {
+                ld.duel.you().plan(); // (lock the turn in half way, so it curves)
+            }
+        }
+        let d = &ld.duel;
+        if let (Some(mt), Some(du)) = (self.online.game.as_mut(), self.online.duel.as_mut()) {
+            let prev_count = mt.countdown;
+            mt.game = d.sides[0].game.clone();
+            mt.game.events = your_events;
+            mt.acc = ld.acc;
+            mt.tick_ms = d.tick_ms();
+            mt.countdown = countdown;
+            if countdown != prev_count && countdown.is_some() {
+                self.sfx.play("tick");
+            }
+            du.boards[1] = d.sides[1].game.clone();
+            du.sides = Value::Array(vec![d.side_extras(0), d.side_extras(1)]);
+            du.next_signature = (d.next_signature - d.tick).max(0);
+            du.sudden = d.tick >= d.secs(150.0);
+            du.events.extend(events);
+        }
+        if d.over && !ld.sent {
+            ld.sent = true;
+            let inputs: Vec<Value> = ld.inputs.iter().map(|(t, dir)| json!([t, dir.name()])).collect();
+            let body = json!({"token": ld.token, "inputs": inputs});
+            self.online.post("/api/story/duel/finish", body, Req::DuelFinish);
+        }
+    }
+
+    /// "Are you still here?" (and being kicked for not answering).
+    fn presence_popup(&mut self) {
+        let u = self.ui.u;
+        let (w, h) = (self.ui.w, self.ui.h);
+        if let Some(msg) = self.kicked.clone() {
+            self.ui.input = true;
+            draw_rectangle(0.0, 0.0, w, h, alpha(BLACK, 0.7));
+            if self.overlay_card("Kicked", "You didn't answer \"Are you still here?\"", &msg, &["OK"]).is_some()
+                || self.ui.hotkey(KeyCode::Enter)
+            {
+                self.kicked = None;
+            }
+            self.ui.input = false;
+            return;
+        }
+        let Some((check, got)) = self.online.presence.clone() else { return };
+        self.ui.input = true;
+        draw_rectangle(0.0, 0.0, w, h, alpha(BLACK, 0.75));
+        let left = (check["seconds"].as_f64().unwrap_or(20.0) - (get_time() - got)).max(0.0);
+        let cw = (520.0 * u).min(w - 32.0 * u);
+        let r = Rect::new((w - cw) / 2.0, (h - 262.0 * u) / 2.0, cw, 262.0 * u);
+        self.ui.card(r);
+        self.ui.text("Are you still here?", r.x + cw / 2.0, r.y + 44.0 * u, 30.0, INK, Align::Center, true);
+        let code = check["code"].as_i64().unwrap_or(0);
+        self.ui.text(&format!("Tap {code} to keep playing."), r.x + cw / 2.0, r.y + 84.0 * u, 17.0, MUTED, Align::Center, false);
+        let bar = Rect::new(r.x + 30.0 * u, r.y + 108.0 * u, cw - 60.0 * u, 10.0 * u);
+        progress(bar, (left / 20.0) as f32, if left < 6.0 { C_RED } else { C_GOLD });
+        let note = if left > 0.0 { format!("{:.0} s left: no answer and your last 6 hours of snake points are taken back", left.ceil()) }
+                   else { "Time's up...".to_string() };
+        let note = self.ui.fit(&note, 12.0, false, cw - 40.0 * u);
+        self.ui.text(&note, r.x + cw / 2.0, r.y + 136.0 * u, 12.0, if left < 6.0 { C_RED } else { MUTED }, Align::Center, false);
+        let choices: Vec<i64> = check["choices"].as_array().map(|a| a.iter().filter_map(|c| c.as_i64()).collect()).unwrap_or_default();
+        let n = choices.len().max(1) as f32;
+        let bw = (cw - 60.0 * u - (n - 1.0) * 12.0 * u) / n;
+        for (i, c) in choices.iter().enumerate() {
+            let br = Rect::new(r.x + 30.0 * u + i as f32 * (bw + 12.0 * u), r.y + 170.0 * u, bw, 64.0 * u);
+            if self.ui.button(&c.to_string(), br, Style::Secondary) && left > 0.0 && !self.online.is_busy(&Req::PresenceAnswer) {
+                self.online.post("/api/presence", json!({"answer": c}), Req::PresenceAnswer);
+            }
+        }
+        self.ui.input = false;
+    }
+
     fn overlays(&mut self) {
         if self.draft.is_some() {
             if self.screen == Screen::Speedrun {
@@ -1414,6 +1610,7 @@ impl App {
         if self.reveal.is_some() {
             crate::screens_shop::draw_reveal(self);
         }
+        self.presence_popup();
         let invite = self.online.invite.clone();
         if let Some((m, _)) = invite {
             if !matches!(self.screen, Screen::Versus | Screen::Play | Screen::Duel) {

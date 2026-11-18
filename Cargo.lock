@@ -192,7 +192,7 @@ dependencies = [
 
 [[package]]
 name = "crustacean"
-version = "3.2.1"
+version = "3.3.0"
 dependencies = [
  "directories",
  "indexmap",

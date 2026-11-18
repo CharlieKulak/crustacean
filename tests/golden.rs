@@ -156,3 +156,73 @@ fn watching_a_run_ends_where_it_did() {
         assert_eq!(run.finished, r["finished"].as_bool().unwrap(), "{id}");
     }
 }
+
+/// Boss duels are played on the player's computer and replayed by the server in Python to
+/// check a win: the Rust duel (and the boss's AI) must come out exactly the same.
+#[test]
+fn boss_duels_replay_exactly() {
+    use crustacean::duel::{BossDef, Duel};
+    let mut failures = Vec::new();
+    for case in golden()["duels"].as_array().unwrap() {
+        let num = case["boss"].as_u64().unwrap() as usize;
+        let seed = case["seed"].as_i64().unwrap();
+        let mut d = Duel::new(BossDef::from_catalog(num).unwrap(), seed);
+        d.start();
+        let inputs: Vec<(i64, Dir)> = case["inputs"].as_array().unwrap().iter()
+            .map(|i| (i[0].as_i64().unwrap(), Dir::parse(i[1].as_str().unwrap()).unwrap())).collect();
+        let mut next = 0;
+        while !d.over && d.tick < 6000 {
+            while next < inputs.len() && inputs[next].0 <= d.tick {
+                let dir = inputs[next].1;
+                d.you().input_for(0, dir);
+                next += 1;
+            }
+            d.step();
+            for s in &mut d.sides {
+                s.game.events.clear();
+            }
+        }
+        let mut problems = Vec::new();
+        if d.tick != case["tick"].as_i64().unwrap() {
+            problems.push(format!("tick {} vs {}", d.tick, case["tick"]));
+        }
+        if d.winner.map(|w| w as i64) != case["winner"].as_i64() {
+            problems.push(format!("winner {:?} vs {}", d.winner, case["winner"]));
+        }
+        for (i, want) in case["sides"].as_array().unwrap().iter().enumerate() {
+            let s = &d.sides[i];
+            let body: Vec<(i64, i64)> = s.game.snakes[0].body.iter().map(|p| (p.x as i64, p.y as i64)).collect();
+            let wbody: Vec<(i64, i64)> = want["body"].as_array().unwrap().iter().map(|p| (p[0].as_i64().unwrap(), p[1].as_i64().unwrap())).collect();
+            if body != wbody {
+                problems.push(format!("side {i} body differs"));
+            }
+            let mut walls: Vec<(i64, i64)> = s.game.walls.keys().map(|&(x, y)| (x as i64, y as i64)).collect();
+            walls.sort();
+            let wwalls: Vec<(i64, i64)> = want["walls"].as_array().unwrap().iter().map(|p| (p[0].as_i64().unwrap(), p[1].as_i64().unwrap())).collect();
+            if walls != wwalls {
+                problems.push(format!("side {i} walls differ ({} vs {})", walls.len(), wwalls.len()));
+            }
+            let apples: Vec<(i64, i64, i64)> = s.game.apples.iter().map(|a| (a.x as i64, a.y as i64, a.poison as i64)).collect();
+            let wapples: Vec<(i64, i64, i64)> = want["apples"].as_array().unwrap().iter()
+                .map(|a| (a[0].as_i64().unwrap(), a[1].as_i64().unwrap(), a[2].as_i64().unwrap())).collect();
+            if apples != wapples {
+                problems.push(format!("side {i} apples differ"));
+            }
+            let mut arrows: Vec<String> = s.game.arrows.iter().map(|(&(x, y), d)| format!("{x},{y},{}", d.name())).collect();
+            arrows.sort();
+            let mut warrows: Vec<String> = want["arrows"].as_array().unwrap().iter()
+                .map(|a| format!("{},{},{}", a[0], a[1], a[2].as_str().unwrap())).collect();
+            warrows.sort();
+            if arrows != warrows {
+                problems.push(format!("side {i} arrows differ"));
+            }
+            if s.sent != want["sent"].as_i64().unwrap() || s.best_chain != want["best_chain"].as_i64().unwrap() {
+                problems.push(format!("side {i} sent/best chain {}/{} vs {}/{}", s.sent, s.best_chain, want["sent"], want["best_chain"]));
+            }
+        }
+        if !problems.is_empty() {
+            failures.push(format!("boss {num} seed {seed}: {}", problems.join("; ")));
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
