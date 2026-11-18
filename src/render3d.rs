@@ -494,6 +494,14 @@ pub fn draw_board3d(v: &View, area: Rect, fx: &Effects) {
                     b.sphere(e + d * 0.08 + vec3(0.0, 0.02, 0.0), 0.07, rgb(20, 24, 32), 5);
                 }
             }
+            if skin.pattern == "moderator" {
+                // the Moderator badge: a gold shield standing on the head
+                let c = vec3(h.x + 0.5, 1.02, h.y + 0.5) - d * 0.05;
+                b.cuboid(c, vec3(0.42, 0.34, 0.08), rgb(250, 204, 21));
+                b.cuboid(c + vec3(0.0, 0.0, 0.0) + d * 0.045, vec3(0.32, 0.26, 0.02), rgb(29, 78, 216));
+                b.sphere(c + vec3(0.0, -0.2, 0.0), 0.12, rgb(250, 204, 21), 6);
+                b.sphere(c + d * 0.07, 0.07, rgb(250, 204, 21), 6);
+            }
             if skin.pattern == "dunce" {
                 // a dunce cap: a paper cone standing on the head
                 let top = vec3(h.x + 0.5, 1.75, h.y + 0.5) - d * 0.1;

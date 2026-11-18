@@ -87,6 +87,7 @@ impl App {
         }
 
         let tiles = [
+            Tile { label: "Story", sub: "80 levels, 8 bosses", icon: "crown", color: rgb(234, 88, 12), to: Screen::Story },
             Tile { label: "Speedrun", sub: "Records & weekly runs", icon: "timer", color: rgb(59, 130, 246), to: Screen::Speedrun },
             Tile { label: "Online", sub: "Versus, ranked or not", icon: "globe", color: rgb(20, 184, 166), to: Screen::Online },
             Tile { label: "Store", sub: "Skins, crates, market", icon: "cart", color: rgb(236, 72, 153), to: Screen::Store },

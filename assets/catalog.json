@@ -1,5 +1,5 @@
 {
- "version": "3.1.1",
+ "version": "3.2.0",
  "skins": [
   {
    "id": "mint",
@@ -1785,6 +1785,140 @@
    "series": "Ranked"
   },
   {
+   "id": "st_knight",
+   "name": "Worm Knight",
+   "rarity": "uncommon",
+   "pattern": "scales",
+   "colors": [
+    "#8a94a6",
+    "#d6dbe3"
+   ],
+   "outline": "#c0392b",
+   "glow": false,
+   "price": null,
+   "series": "Story"
+  },
+  {
+   "id": "st_mamba",
+   "name": "Swamp Queen",
+   "rarity": "rare",
+   "pattern": "aurora",
+   "colors": [
+    "#0f3d1e",
+    "#1f7a3a",
+    "#a5d65a",
+    "#f5c518"
+   ],
+   "outline": "#f5c518",
+   "glow": false,
+   "price": null,
+   "series": "Story"
+  },
+  {
+   "id": "st_coil",
+   "name": "Clockwork Coil",
+   "rarity": "rare",
+   "pattern": "circuit",
+   "colors": [
+    "#5a3a14",
+    "#8a5a24",
+    "#4fc3f7"
+   ],
+   "outline": "#e8c27a",
+   "glow": false,
+   "price": null,
+   "series": "Story"
+  },
+  {
+   "id": "st_frost",
+   "name": "Frostfang",
+   "rarity": "epic",
+   "pattern": "shimmer",
+   "colors": [
+    "#5fb4e8",
+    "#ffffff"
+   ],
+   "outline": "#e6f6ff",
+   "glow": true,
+   "price": null,
+   "series": "Story"
+  },
+  {
+   "id": "st_pyra",
+   "name": "Ember Serpent",
+   "rarity": "epic",
+   "pattern": "lava",
+   "colors": [
+    "#3a0a05",
+    "#b3261e",
+    "#ffd54f"
+   ],
+   "outline": "#ff8a3d",
+   "glow": true,
+   "price": null,
+   "series": "Story"
+  },
+  {
+   "id": "st_umbra",
+   "name": "Shadow Coil",
+   "rarity": "legendary",
+   "pattern": "galaxy",
+   "colors": [
+    "#120a1e",
+    "#2a1b3d",
+    "#b388ff"
+   ],
+   "outline": "#b388ff",
+   "glow": true,
+   "price": null,
+   "series": "Story"
+  },
+  {
+   "id": "st_gear",
+   "name": "Iron Constrictor",
+   "rarity": "legendary",
+   "pattern": "circuit",
+   "colors": [
+    "#3a4048",
+    "#5a6270",
+    "#ff5252"
+   ],
+   "outline": "#aab3bf",
+   "glow": true,
+   "price": null,
+   "series": "Story"
+  },
+  {
+   "id": "st_ouroboros",
+   "name": "The Ouroboros",
+   "rarity": "mythic",
+   "pattern": "ouroboros",
+   "colors": [
+    "#0f3d2e",
+    "#2fbf71",
+    "#ffd54f"
+   ],
+   "outline": "#ffd54f",
+   "glow": true,
+   "price": null,
+   "series": "Story"
+  },
+  {
+   "id": "moderator",
+   "name": "Moderator",
+   "rarity": "mythic",
+   "pattern": "moderator",
+   "colors": [
+    "#0b1f4d",
+    "#1d4ed8",
+    "#facc15"
+   ],
+   "outline": "#facc15",
+   "glow": true,
+   "price": null,
+   "series": "Gift"
+  },
+  {
    "id": "gambledtoomuch",
    "name": "aogski gambled to much",
    "rarity": "common",
@@ -2380,6 +2514,7 @@
  ],
  "untradeable": [
   "skin:gambledtoomuch",
+  "skin:moderator",
   "skin:rk_anaconda",
   "skin:rk_basilisk",
   "skin:rk_cobra",
@@ -2388,6 +2523,2878 @@
   "skin:rk_rattler",
   "skin:rk_viper"
  ],
+ "story": {
+  "star_points": {
+   "1": 3000,
+   "2": 5000,
+   "3": 8000,
+   "4": 12000,
+   "5": 18000,
+   "6": 25000,
+   "7": 32000,
+   "8": 40000
+  },
+  "chapters": [
+   {
+    "num": 1,
+    "name": "Meadow",
+    "blurb": "Sunny fields and an easy start. Learn to turn tight and think ahead.",
+    "color": "#4caf50",
+    "levels": [
+     {
+      "id": "s1-01",
+      "num": 1,
+      "name": "First Bite",
+      "w": 10,
+      "h": 9,
+      "modes": [],
+      "goal": 5,
+      "fruit_count": 1,
+      "tick_ms": 150.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        8000,
+        0
+       ],
+       [
+        "turns",
+        23,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 8.0 s or less",
+       "Finish with 23 turns or fewer"
+      ]
+     },
+     {
+      "id": "s1-02",
+      "num": 2,
+      "name": "Clover Patch",
+      "w": 11,
+      "h": 9,
+      "modes": [],
+      "goal": 8,
+      "fruit_count": 1,
+      "tick_ms": 145.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        14000,
+        0
+       ],
+       [
+        "split",
+        4,
+        7000
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 14.0 s or less",
+       "Eat 4 fruit in 7.0 s or less"
+      ]
+     },
+     {
+      "id": "s1-03",
+      "num": 3,
+      "name": "Buttercup Lane",
+      "w": 12,
+      "h": 10,
+      "modes": [],
+      "goal": 10,
+      "fruit_count": 2,
+      "tick_ms": 140.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        15500,
+        0
+       ],
+       [
+        "turns",
+        38,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 15.5 s or less",
+       "Finish with 38 turns or fewer"
+      ]
+     },
+     {
+      "id": "s1-04",
+      "num": 4,
+      "name": "Dandelion Dash",
+      "w": 12,
+      "h": 10,
+      "modes": [],
+      "goal": 12,
+      "fruit_count": 2,
+      "tick_ms": 135.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        17500,
+        0
+       ],
+       [
+        "split",
+        6,
+        8000
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 17.5 s or less",
+       "Eat 6 fruit in 8.0 s or less"
+      ]
+     },
+     {
+      "id": "s1-05",
+      "num": 5,
+      "name": "Picnic Blanket",
+      "w": 9,
+      "h": 8,
+      "modes": [],
+      "goal": 12,
+      "fruit_count": 1,
+      "tick_ms": 140.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        21000,
+        0
+       ],
+       [
+        "turns",
+        52,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 21.0 s or less",
+       "Finish with 52 turns or fewer"
+      ]
+     },
+     {
+      "id": "s1-06",
+      "num": 6,
+      "name": "Bumblebee Loop",
+      "w": 14,
+      "h": 11,
+      "modes": [],
+      "goal": 15,
+      "fruit_count": 3,
+      "tick_ms": 130.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        21500,
+        0
+       ],
+       [
+        "split",
+        7,
+        10000
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 21.5 s or less",
+       "Eat 7 fruit in 10.0 s or less"
+      ]
+     },
+     {
+      "id": "s1-07",
+      "num": 7,
+      "name": "Sunflower Field",
+      "w": 14,
+      "h": 12,
+      "modes": [
+       "magnet"
+      ],
+      "goal": 15,
+      "fruit_count": 2,
+      "tick_ms": 130.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        20500,
+        0
+       ],
+       [
+        "turns",
+        46,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 20.5 s or less",
+       "Finish with 46 turns or fewer"
+      ]
+     },
+     {
+      "id": "s1-08",
+      "num": 8,
+      "name": "Rabbit Run",
+      "w": 13,
+      "h": 11,
+      "modes": [],
+      "goal": 18,
+      "fruit_count": 2,
+      "tick_ms": 125.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        28000,
+        0
+       ],
+       [
+        "split",
+        9,
+        13000
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 28.0 s or less",
+       "Eat 9 fruit in 13.0 s or less"
+      ]
+     },
+     {
+      "id": "s1-09",
+      "num": 9,
+      "name": "Long Grass",
+      "w": 16,
+      "h": 12,
+      "modes": [],
+      "goal": 20,
+      "fruit_count": 3,
+      "tick_ms": 125.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        28500,
+        0
+       ],
+       [
+        "turns",
+        65,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 28.5 s or less",
+       "Finish with 65 turns or fewer"
+      ]
+     },
+     {
+      "id": "s1-10",
+      "num": 10,
+      "name": "Meadow's Edge",
+      "w": 12,
+      "h": 10,
+      "modes": [],
+      "goal": 22,
+      "fruit_count": 1,
+      "tick_ms": 120.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        40000,
+        0
+       ],
+       [
+        "split",
+        11,
+        18500
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 40.0 s or less",
+       "Eat 11 fruit in 18.5 s or less"
+      ]
+     }
+    ],
+    "boss": {
+     "num": 1,
+     "id": "wiggleton",
+     "name": "Sir Wiggleton",
+     "title": "the Worm Knight",
+     "taunt": "Halt! None shall pass the meadow without besting my noble wriggle!",
+     "attack": "pebbles",
+     "attack_name": "Pebble Toss",
+     "attack_desc": "Throws a handful of pebbles onto your board: 3 walls.",
+     "attack_every": 16,
+     "w": 14,
+     "h": 11,
+     "apples": 3,
+     "tick_ms": 140,
+     "combo_window": 9,
+     "skin": "skin:st_knight",
+     "colors": [
+      "#8a94a6",
+      "#d6dbe3",
+      "#c0392b"
+     ],
+     "modes": [],
+     "rewards": [
+      [
+       "points",
+       50000
+      ],
+      [
+       "crate",
+       "gold"
+      ],
+      [
+       "item",
+       "skin:st_knight"
+      ]
+     ],
+     "reward_names": [
+      "50,000 snake points",
+      "Gold Crate",
+      "Worm Knight"
+     ]
+    }
+   },
+   {
+    "num": 2,
+    "name": "Orchard",
+    "blurb": "Locked fruit, keys hidden in the trees, and shields to save your skin.",
+    "color": "#e8772e",
+    "levels": [
+     {
+      "id": "s2-01",
+      "num": 1,
+      "name": "Locked Pantry",
+      "w": 12,
+      "h": 10,
+      "modes": [
+       "key"
+      ],
+      "goal": 6,
+      "fruit_count": 1,
+      "tick_ms": 135.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        20500,
+        0
+       ],
+       [
+        "turns",
+        42,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 20.5 s or less",
+       "Finish with 42 turns or fewer"
+      ]
+     },
+     {
+      "id": "s2-02",
+      "num": 2,
+      "name": "Apple Cart",
+      "w": 13,
+      "h": 11,
+      "modes": [
+       "key"
+      ],
+      "goal": 8,
+      "fruit_count": 2,
+      "tick_ms": 132.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        22000,
+        0
+       ],
+       [
+        "split",
+        4,
+        12000
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 22.0 s or less",
+       "Eat 4 fruit in 12.0 s or less"
+      ]
+     },
+     {
+      "id": "s2-03",
+      "num": 3,
+      "name": "Guardian Bark",
+      "w": 12,
+      "h": 10,
+      "modes": [
+       "shield"
+      ],
+      "goal": 10,
+      "fruit_count": 1,
+      "tick_ms": 130.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        19000,
+        0
+       ],
+       [
+        "turns",
+        47,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 19.0 s or less",
+       "Finish with 47 turns or fewer"
+      ]
+     },
+     {
+      "id": "s2-04",
+      "num": 4,
+      "name": "Key Keeper",
+      "w": 14,
+      "h": 11,
+      "modes": [
+       "key",
+       "magnet"
+      ],
+      "goal": 10,
+      "fruit_count": 2,
+      "tick_ms": 128.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        27000,
+        0
+       ],
+       [
+        "split",
+        5,
+        12500
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 27.0 s or less",
+       "Eat 5 fruit in 12.5 s or less"
+      ]
+     },
+     {
+      "id": "s2-05",
+      "num": 5,
+      "name": "Bramble Shield",
+      "w": 13,
+      "h": 11,
+      "modes": [
+       "key",
+       "shield"
+      ],
+      "goal": 10,
+      "fruit_count": 2,
+      "tick_ms": 125.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        28000,
+        0
+       ],
+       [
+        "turns",
+        73,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 28.0 s or less",
+       "Finish with 73 turns or fewer"
+      ]
+     },
+     {
+      "id": "s2-06",
+      "num": 6,
+      "name": "Windfall",
+      "w": 15,
+      "h": 12,
+      "modes": [
+       "magnet"
+      ],
+      "goal": 18,
+      "fruit_count": 3,
+      "tick_ms": 120.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        17500,
+        0
+       ],
+       [
+        "split",
+        9,
+        8500
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 17.5 s or less",
+       "Eat 9 fruit in 8.5 s or less"
+      ]
+     },
+     {
+      "id": "s2-07",
+      "num": 7,
+      "name": "Cellar Door",
+      "w": 12,
+      "h": 10,
+      "modes": [
+       "key"
+      ],
+      "goal": 14,
+      "fruit_count": 1,
+      "tick_ms": 120.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        45500,
+        0
+       ],
+       [
+        "turns",
+        108,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 45.5 s or less",
+       "Finish with 108 turns or fewer"
+      ]
+     },
+     {
+      "id": "s2-08",
+      "num": 8,
+      "name": "Grafting",
+      "w": 14,
+      "h": 12,
+      "modes": [
+       "key",
+       "shield"
+      ],
+      "goal": 14,
+      "fruit_count": 2,
+      "tick_ms": 118.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        41000,
+        0
+       ],
+       [
+        "noshield",
+        0,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 41.0 s or less",
+       "Finish without losing a shield"
+      ]
+     },
+     {
+      "id": "s2-09",
+      "num": 9,
+      "name": "Harvest Rush",
+      "w": 16,
+      "h": 12,
+      "modes": [
+       "magnet",
+       "shield"
+      ],
+      "goal": 22,
+      "fruit_count": 3,
+      "tick_ms": 115.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        22000,
+        0
+       ],
+       [
+        "turns",
+        56,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 22.0 s or less",
+       "Finish with 56 turns or fewer"
+      ]
+     },
+     {
+      "id": "s2-10",
+      "num": 10,
+      "name": "Orchard Gate",
+      "w": 14,
+      "h": 12,
+      "modes": [
+       "key",
+       "magnet",
+       "shield"
+      ],
+      "goal": 18,
+      "fruit_count": 2,
+      "tick_ms": 110.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        44000,
+        0
+       ],
+       [
+        "noshield",
+        0,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 44.0 s or less",
+       "Finish without losing a shield"
+      ]
+     }
+    ],
+    "boss": {
+     "num": 2,
+     "id": "mamba",
+     "name": "Mamba Mae",
+     "title": "Queen of the Swamp",
+     "taunt": "Oh, honey. Everything in my orchard is a little bit poisonous.",
+     "attack": "venom",
+     "attack_name": "Venom",
+     "attack_desc": "Turns fruit on your board into poison for a while.",
+     "attack_every": 15,
+     "w": 14,
+     "h": 11,
+     "apples": 3,
+     "tick_ms": 132,
+     "combo_window": 8,
+     "skin": "skin:st_mamba",
+     "colors": [
+      "#1f7a3a",
+      "#a5d65a",
+      "#f5c518"
+     ],
+     "modes": [],
+     "rewards": [
+      [
+       "points",
+       100000
+      ],
+      [
+       "crate",
+       "diamond"
+      ],
+      [
+       "item",
+       "skin:st_mamba"
+      ]
+     ],
+     "reward_names": [
+      "100,000 snake points",
+      "Diamond Crate",
+      "Swamp Queen"
+     ]
+    }
+   },
+   {
+    "num": 3,
+    "name": "Ruins",
+    "blurb": "Old stone that keeps on growing. Every bite builds another wall.",
+    "color": "#a1887f",
+    "levels": [
+     {
+      "id": "s3-01",
+      "num": 1,
+      "name": "Crumbling Wall",
+      "w": 12,
+      "h": 10,
+      "modes": [
+       "wall"
+      ],
+      "goal": 8,
+      "fruit_count": 1,
+      "tick_ms": 128.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        12500,
+        0
+       ],
+       [
+        "turns",
+        33,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 12.5 s or less",
+       "Finish with 33 turns or fewer"
+      ]
+     },
+     {
+      "id": "s3-02",
+      "num": 2,
+      "name": "Stone Garden",
+      "w": 12,
+      "h": 10,
+      "modes": [
+       "statue"
+      ],
+      "goal": 6,
+      "fruit_count": 1,
+      "tick_ms": 128.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        8500,
+        0
+       ],
+       [
+        "split",
+        3,
+        4000
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 8.5 s or less",
+       "Eat 3 fruit in 4.0 s or less"
+      ]
+     },
+     {
+      "id": "s3-03",
+      "num": 3,
+      "name": "Swiss Steps",
+      "w": 13,
+      "h": 11,
+      "modes": [
+       "cheese"
+      ],
+      "goal": 12,
+      "fruit_count": 1,
+      "tick_ms": 125.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        20000,
+        0
+       ],
+       [
+        "turns",
+        43,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 20.0 s or less",
+       "Finish with 43 turns or fewer"
+      ]
+     },
+     {
+      "id": "s3-04",
+      "num": 4,
+      "name": "Fallen Columns",
+      "w": 14,
+      "h": 11,
+      "modes": [
+       "wall"
+      ],
+      "goal": 12,
+      "fruit_count": 2,
+      "tick_ms": 122.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        16500,
+        0
+       ],
+       [
+        "split",
+        6,
+        7500
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 16.5 s or less",
+       "Eat 6 fruit in 7.5 s or less"
+      ]
+     },
+     {
+      "id": "s3-05",
+      "num": 5,
+      "name": "Petrified",
+      "w": 13,
+      "h": 11,
+      "modes": [
+       "statue"
+      ],
+      "goal": 9,
+      "fruit_count": 1,
+      "tick_ms": 120.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        14000,
+        0
+       ],
+       [
+        "turns",
+        37,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 14.0 s or less",
+       "Finish with 37 turns or fewer"
+      ]
+     },
+     {
+      "id": "s3-06",
+      "num": 6,
+      "name": "Holey Halls",
+      "w": 14,
+      "h": 12,
+      "modes": [
+       "cheese",
+       "wall"
+      ],
+      "goal": 12,
+      "fruit_count": 2,
+      "tick_ms": 118.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        15500,
+        0
+       ],
+       [
+        "split",
+        6,
+        7500
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 15.5 s or less",
+       "Eat 6 fruit in 7.5 s or less"
+      ]
+     },
+     {
+      "id": "s3-07",
+      "num": 7,
+      "name": "Rubble Run",
+      "w": 15,
+      "h": 12,
+      "modes": [
+       "shield",
+       "wall"
+      ],
+      "goal": 15,
+      "fruit_count": 2,
+      "tick_ms": 115.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        23500,
+        0
+       ],
+       [
+        "turns",
+        62,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 23.5 s or less",
+       "Finish with 62 turns or fewer"
+      ]
+     },
+     {
+      "id": "s3-08",
+      "num": 8,
+      "name": "Statuary",
+      "w": 14,
+      "h": 12,
+      "modes": [
+       "cheese",
+       "statue"
+      ],
+      "goal": 10,
+      "fruit_count": 2,
+      "tick_ms": 112.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        12500,
+        0
+       ],
+       [
+        "split",
+        5,
+        6000
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 12.5 s or less",
+       "Eat 5 fruit in 6.0 s or less"
+      ]
+     },
+     {
+      "id": "s3-09",
+      "num": 9,
+      "name": "Collapse",
+      "w": 16,
+      "h": 12,
+      "modes": [
+       "wall"
+      ],
+      "goal": 18,
+      "fruit_count": 2,
+      "tick_ms": 108.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        22000,
+        0
+       ],
+       [
+        "turns",
+        65,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 22.0 s or less",
+       "Finish with 65 turns or fewer"
+      ]
+     },
+     {
+      "id": "s3-10",
+      "num": 10,
+      "name": "Heart of the Ruins",
+      "w": 15,
+      "h": 12,
+      "modes": [
+       "statue",
+       "wall"
+      ],
+      "goal": 12,
+      "fruit_count": 2,
+      "tick_ms": 104.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        14500,
+        0
+       ],
+       [
+        "split",
+        6,
+        7500
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 14.5 s or less",
+       "Eat 6 fruit in 7.5 s or less"
+      ]
+     }
+    ],
+    "boss": {
+     "num": 3,
+     "id": "coil",
+     "name": "Professor Coil",
+     "title": "the Clockwork Genius",
+     "taunt": "Fascinating. Let us see how you handle a little... rearrangement.",
+     "attack": "scramble",
+     "attack_name": "Scramble",
+     "attack_desc": "Bolts arrow tiles to your board that force you to turn.",
+     "attack_every": 14,
+     "w": 15,
+     "h": 12,
+     "apples": 3,
+     "tick_ms": 125,
+     "combo_window": 8,
+     "skin": "skin:st_coil",
+     "colors": [
+      "#8a5a24",
+      "#e8c27a",
+      "#4fc3f7"
+     ],
+     "modes": [],
+     "rewards": [
+      [
+       "points",
+       150000
+      ],
+      [
+       "crate",
+       "diamond"
+      ],
+      [
+       "crate",
+       "diamond"
+      ],
+      [
+       "item",
+       "skin:st_coil"
+      ]
+     ],
+     "reward_names": [
+      "150,000 snake points",
+      "Diamond Crate",
+      "Diamond Crate",
+      "Clockwork Coil"
+     ]
+    }
+   },
+   {
+    "num": 4,
+    "name": "Clockwork",
+    "blurb": "Portals, arrows and gates that tick open and shut. Mind the timing.",
+    "color": "#d4a14a",
+    "levels": [
+     {
+      "id": "s4-01",
+      "num": 1,
+      "name": "Wormhole",
+      "w": 12,
+      "h": 10,
+      "modes": [
+       "portal"
+      ],
+      "goal": 8,
+      "fruit_count": 1,
+      "tick_ms": 122.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        8500,
+        0
+       ],
+       [
+        "turns",
+        22,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 8.5 s or less",
+       "Finish with 22 turns or fewer"
+      ]
+     },
+     {
+      "id": "s4-02",
+      "num": 2,
+      "name": "Signposts",
+      "w": 12,
+      "h": 10,
+      "modes": [
+       "arrow"
+      ],
+      "goal": 8,
+      "fruit_count": 1,
+      "tick_ms": 122.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        11000,
+        0
+       ],
+       [
+        "split",
+        4,
+        5000
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 11.0 s or less",
+       "Eat 4 fruit in 5.0 s or less"
+      ]
+     },
+     {
+      "id": "s4-03",
+      "num": 3,
+      "name": "Tick Tock Gates",
+      "w": 13,
+      "h": 11,
+      "modes": [
+       "gate"
+      ],
+      "goal": 10,
+      "fruit_count": 1,
+      "tick_ms": 120.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        15000,
+        0
+       ],
+       [
+        "turns",
+        36,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 15.0 s or less",
+       "Finish with 36 turns or fewer"
+      ]
+     },
+     {
+      "id": "s4-04",
+      "num": 4,
+      "name": "Flip Side",
+      "w": 12,
+      "h": 10,
+      "modes": [
+       "twin"
+      ],
+      "goal": 10,
+      "fruit_count": 1,
+      "tick_ms": 120.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        12000,
+        0
+       ],
+       [
+        "split",
+        5,
+        5500
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 12.0 s or less",
+       "Eat 5 fruit in 5.5 s or less"
+      ]
+     },
+     {
+      "id": "s4-05",
+      "num": 5,
+      "name": "Rush Hour",
+      "w": 14,
+      "h": 11,
+      "modes": [
+       "arrow",
+       "gate"
+      ],
+      "goal": 10,
+      "fruit_count": 2,
+      "tick_ms": 116.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        11000,
+        0
+       ],
+       [
+        "turns",
+        31,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 11.0 s or less",
+       "Finish with 31 turns or fewer"
+      ]
+     },
+     {
+      "id": "s4-06",
+      "num": 6,
+      "name": "Hall of Mirrors",
+      "w": 14,
+      "h": 12,
+      "modes": [
+       "portal",
+       "twin"
+      ],
+      "goal": 10,
+      "fruit_count": 1,
+      "tick_ms": 114.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        10000,
+        0
+       ],
+       [
+        "split",
+        5,
+        5000
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 10.0 s or less",
+       "Eat 5 fruit in 5.0 s or less"
+      ]
+     },
+     {
+      "id": "s4-07",
+      "num": 7,
+      "name": "Escapement",
+      "w": 14,
+      "h": 12,
+      "modes": [
+       "gate",
+       "wall"
+      ],
+      "goal": 12,
+      "fruit_count": 2,
+      "tick_ms": 110.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        13500,
+        0
+       ],
+       [
+        "turns",
+        41,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 13.5 s or less",
+       "Finish with 41 turns or fewer"
+      ]
+     },
+     {
+      "id": "s4-08",
+      "num": 8,
+      "name": "Compass Rose",
+      "w": 15,
+      "h": 12,
+      "modes": [
+       "arrow",
+       "portal"
+      ],
+      "goal": 12,
+      "fruit_count": 1,
+      "tick_ms": 106.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        13500,
+        0
+       ],
+       [
+        "split",
+        6,
+        5500
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 13.5 s or less",
+       "Eat 6 fruit in 5.5 s or less"
+      ]
+     },
+     {
+      "id": "s4-09",
+      "num": 9,
+      "name": "Mainspring",
+      "w": 16,
+      "h": 12,
+      "modes": [
+       "arrow",
+       "gate",
+       "twin"
+      ],
+      "goal": 12,
+      "fruit_count": 2,
+      "tick_ms": 102.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        13500,
+        0
+       ],
+       [
+        "turns",
+        40,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 13.5 s or less",
+       "Finish with 40 turns or fewer"
+      ]
+     },
+     {
+      "id": "s4-10",
+      "num": 10,
+      "name": "The Great Clock",
+      "w": 16,
+      "h": 13,
+      "modes": [
+       "arrow",
+       "gate",
+       "portal"
+      ],
+      "goal": 14,
+      "fruit_count": 2,
+      "tick_ms": 98.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        10000,
+        0
+       ],
+       [
+        "split",
+        7,
+        5500
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 10.0 s or less",
+       "Eat 7 fruit in 5.5 s or less"
+      ]
+     }
+    ],
+    "boss": {
+     "num": 4,
+     "id": "frostfang",
+     "name": "Frostfang",
+     "title": "the Glacier Wyrm",
+     "taunt": "Cold is patient. Cold always wins.",
+     "attack": "icewall",
+     "attack_name": "Ice Wall",
+     "attack_desc": "Freezes a wall of ice across your board. It melts after a while.",
+     "attack_every": 14,
+     "w": 15,
+     "h": 12,
+     "apples": 3,
+     "tick_ms": 118,
+     "combo_window": 7,
+     "skin": "skin:st_frost",
+     "colors": [
+      "#5fb4e8",
+      "#e6f6ff",
+      "#ffffff"
+     ],
+     "modes": [],
+     "rewards": [
+      [
+       "points",
+       250000
+      ],
+      [
+       "crate",
+       "royal"
+      ],
+      [
+       "item",
+       "skin:st_frost"
+      ]
+     ],
+     "reward_names": [
+      "250,000 snake points",
+      "Royal Crate",
+      "Frostfang"
+     ]
+    }
+   },
+   {
+    "num": 5,
+    "name": "Swamp",
+    "blurb": "Poison fruit and pitch-dark water. Look before you bite.",
+    "color": "#5e8c31",
+    "levels": [
+     {
+      "id": "s5-01",
+      "num": 1,
+      "name": "Toxic Tidbits",
+      "w": 12,
+      "h": 10,
+      "modes": [
+       "poison"
+      ],
+      "goal": 8,
+      "fruit_count": 2,
+      "tick_ms": 118.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        7500,
+        0
+       ],
+       [
+        "turns",
+        21,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 7.5 s or less",
+       "Finish with 21 turns or fewer"
+      ]
+     },
+     {
+      "id": "s5-02",
+      "num": 2,
+      "name": "Lantern Light",
+      "w": 13,
+      "h": 11,
+      "modes": [
+       "light"
+      ],
+      "goal": 8,
+      "fruit_count": 1,
+      "tick_ms": 118.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        11000,
+        0
+       ],
+       [
+        "split",
+        4,
+        5500
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 11.0 s or less",
+       "Eat 4 fruit in 5.5 s or less"
+      ]
+     },
+     {
+      "id": "s5-03",
+      "num": 3,
+      "name": "Bog Berries",
+      "w": 14,
+      "h": 11,
+      "modes": [
+       "poison"
+      ],
+      "goal": 12,
+      "fruit_count": 3,
+      "tick_ms": 115.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        11500,
+        0
+       ],
+       [
+        "turns",
+        34,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 11.5 s or less",
+       "Finish with 34 turns or fewer"
+      ]
+     },
+     {
+      "id": "s5-04",
+      "num": 4,
+      "name": "Firefly Path",
+      "w": 14,
+      "h": 12,
+      "modes": [
+       "light",
+       "magnet"
+      ],
+      "goal": 10,
+      "fruit_count": 2,
+      "tick_ms": 112.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        9500,
+        0
+       ],
+       [
+        "split",
+        5,
+        4500
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 9.5 s or less",
+       "Eat 5 fruit in 4.5 s or less"
+      ]
+     },
+     {
+      "id": "s5-05",
+      "num": 5,
+      "name": "Will-o'-Wisp",
+      "w": 14,
+      "h": 12,
+      "modes": [
+       "light",
+       "shield"
+      ],
+      "goal": 12,
+      "fruit_count": 2,
+      "tick_ms": 110.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        14500,
+        0
+       ],
+       [
+        "turns",
+        39,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 14.5 s or less",
+       "Finish with 39 turns or fewer"
+      ]
+     },
+     {
+      "id": "s5-06",
+      "num": 6,
+      "name": "Murky Waters",
+      "w": 15,
+      "h": 12,
+      "modes": [
+       "light",
+       "poison"
+      ],
+      "goal": 10,
+      "fruit_count": 2,
+      "tick_ms": 106.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        10000,
+        0
+       ],
+       [
+        "split",
+        5,
+        5000
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 10.0 s or less",
+       "Eat 5 fruit in 5.0 s or less"
+      ]
+     },
+     {
+      "id": "s5-07",
+      "num": 7,
+      "name": "Leech Pool",
+      "w": 14,
+      "h": 12,
+      "modes": [
+       "poison",
+       "wall"
+      ],
+      "goal": 12,
+      "fruit_count": 2,
+      "tick_ms": 104.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        12000,
+        0
+       ],
+       [
+        "turns",
+        36,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 12.0 s or less",
+       "Finish with 36 turns or fewer"
+      ]
+     },
+     {
+      "id": "s5-08",
+      "num": 8,
+      "name": "Night Bloom",
+      "w": 15,
+      "h": 12,
+      "modes": [
+       "key",
+       "light"
+      ],
+      "goal": 10,
+      "fruit_count": 2,
+      "tick_ms": 100.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        20500,
+        0
+       ],
+       [
+        "split",
+        5,
+        10500
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 20.5 s or less",
+       "Eat 5 fruit in 10.5 s or less"
+      ]
+     },
+     {
+      "id": "s5-09",
+      "num": 9,
+      "name": "Miasma",
+      "w": 16,
+      "h": 12,
+      "modes": [
+       "cheese",
+       "poison"
+      ],
+      "goal": 15,
+      "fruit_count": 3,
+      "tick_ms": 98.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        13000,
+        0
+       ],
+       [
+        "turns",
+        40,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 13.0 s or less",
+       "Finish with 40 turns or fewer"
+      ]
+     },
+     {
+      "id": "s5-10",
+      "num": 10,
+      "name": "Heart of the Swamp",
+      "w": 16,
+      "h": 13,
+      "modes": [
+       "light",
+       "poison",
+       "wall"
+      ],
+      "goal": 12,
+      "fruit_count": 3,
+      "tick_ms": 95.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        9500,
+        0
+       ],
+       [
+        "split",
+        6,
+        5000
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 9.5 s or less",
+       "Eat 6 fruit in 5.0 s or less"
+      ]
+     }
+    ],
+    "boss": {
+     "num": 5,
+     "id": "pyra",
+     "name": "Pyra",
+     "title": "the Ember Serpent",
+     "taunt": "Dance for me, little snake. The floor is lava.",
+     "attack": "firestorm",
+     "attack_name": "Firestorm",
+     "attack_desc": "Rains burning embers on your board. They burn out a few seconds later.",
+     "attack_every": 13,
+     "w": 16,
+     "h": 12,
+     "apples": 3,
+     "tick_ms": 110,
+     "combo_window": 7,
+     "skin": "skin:st_pyra",
+     "colors": [
+      "#b3261e",
+      "#ff8a3d",
+      "#ffd54f"
+     ],
+     "modes": [],
+     "rewards": [
+      [
+       "points",
+       400000
+      ],
+      [
+       "crate",
+       "royal"
+      ],
+      [
+       "item",
+       "skin:st_pyra"
+      ]
+     ],
+     "reward_names": [
+      "400,000 snake points",
+      "Royal Crate",
+      "Ember Serpent"
+     ]
+    }
+   },
+   {
+    "num": 6,
+    "name": "Minefield",
+    "blurb": "Hidden mines, crates to shove and walls that flicker between worlds.",
+    "color": "#8d6e63",
+    "levels": [
+     {
+      "id": "s6-01",
+      "num": 1,
+      "name": "Tread Lightly",
+      "w": 12,
+      "h": 10,
+      "modes": [
+       "minesweeper"
+      ],
+      "goal": 6,
+      "fruit_count": 1,
+      "tick_ms": 115.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        6000,
+        0
+       ],
+       [
+        "turns",
+        21,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 6.0 s or less",
+       "Finish with 21 turns or fewer"
+      ]
+     },
+     {
+      "id": "s6-02",
+      "num": 2,
+      "name": "Box Pusher",
+      "w": 9,
+      "h": 8,
+      "modes": [
+       "sokoban"
+      ],
+      "goal": 2,
+      "fruit_count": 1,
+      "tick_ms": 112.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        32000,
+        0
+       ],
+       [
+        "split",
+        1,
+        14000
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 32.0 s or less",
+       "Eat 1 fruit in 14.0 s or less"
+      ]
+     },
+     {
+      "id": "s6-03",
+      "num": 3,
+      "name": "Phase Shift",
+      "w": 13,
+      "h": 11,
+      "modes": [
+       "dimension"
+      ],
+      "goal": 10,
+      "fruit_count": 1,
+      "tick_ms": 112.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        13500,
+        0
+       ],
+       [
+        "turns",
+        35,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 13.5 s or less",
+       "Finish with 35 turns or fewer"
+      ]
+     },
+     {
+      "id": "s6-04",
+      "num": 4,
+      "name": "Sweeper",
+      "w": 14,
+      "h": 11,
+      "modes": [
+       "minesweeper",
+       "shield"
+      ],
+      "goal": 8,
+      "fruit_count": 1,
+      "tick_ms": 110.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        13000,
+        0
+       ],
+       [
+        "noshield",
+        0,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 13.0 s or less",
+       "Finish without losing a shield"
+      ]
+     },
+     {
+      "id": "s6-05",
+      "num": 5,
+      "name": "Warehouse",
+      "w": 11,
+      "h": 9,
+      "modes": [
+       "sokoban"
+      ],
+      "goal": 3,
+      "fruit_count": 2,
+      "tick_ms": 108.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        48000,
+        0
+       ],
+       [
+        "turns",
+        52,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 48.0 s or less",
+       "Finish with 52 turns or fewer"
+      ]
+     },
+     {
+      "id": "s6-06",
+      "num": 6,
+      "name": "Twin Realms",
+      "w": 14,
+      "h": 12,
+      "modes": [
+       "dimension",
+       "wall"
+      ],
+      "goal": 10,
+      "fruit_count": 1,
+      "tick_ms": 106.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        13500,
+        0
+       ],
+       [
+        "split",
+        5,
+        6500
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 13.5 s or less",
+       "Eat 5 fruit in 6.5 s or less"
+      ]
+     },
+     {
+      "id": "s6-07",
+      "num": 7,
+      "name": "Danger Close",
+      "w": 15,
+      "h": 12,
+      "modes": [
+       "magnet",
+       "minesweeper"
+      ],
+      "goal": 10,
+      "fruit_count": 2,
+      "tick_ms": 104.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        7500,
+        0
+       ],
+       [
+        "turns",
+        24,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 7.5 s or less",
+       "Finish with 24 turns or fewer"
+      ]
+     },
+     {
+      "id": "s6-08",
+      "num": 8,
+      "name": "Crate Expectations",
+      "w": 12,
+      "h": 10,
+      "modes": [
+       "sokoban"
+      ],
+      "goal": 4,
+      "fruit_count": 2,
+      "tick_ms": 110.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        64000,
+        0
+       ],
+       [
+        "split",
+        2,
+        28000
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 64.0 s or less",
+       "Eat 2 fruit in 28.0 s or less"
+      ]
+     },
+     {
+      "id": "s6-09",
+      "num": 9,
+      "name": "Shifting Sands",
+      "w": 16,
+      "h": 12,
+      "modes": [
+       "dimension",
+       "minesweeper"
+      ],
+      "goal": 10,
+      "fruit_count": 2,
+      "tick_ms": 100.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        9000,
+        0
+       ],
+       [
+        "turns",
+        31,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 9.0 s or less",
+       "Finish with 31 turns or fewer"
+      ]
+     },
+     {
+      "id": "s6-10",
+      "num": 10,
+      "name": "No Man's Land",
+      "w": 16,
+      "h": 13,
+      "modes": [
+       "dimension",
+       "minesweeper",
+       "shield"
+      ],
+      "goal": 12,
+      "fruit_count": 2,
+      "tick_ms": 96.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        10500,
+        0
+       ],
+       [
+        "noshield",
+        0,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 10.5 s or less",
+       "Finish without losing a shield"
+      ]
+     }
+    ],
+    "boss": {
+     "num": 6,
+     "id": "umbra",
+     "name": "Umbra",
+     "title": "the Shadow Coil",
+     "taunt": "You'll never see me coming. You won't see anything at all.",
+     "attack": "eclipse",
+     "attack_name": "Eclipse",
+     "attack_desc": "Plunges your board into darkness for 6 seconds.",
+     "attack_every": 12,
+     "w": 16,
+     "h": 12,
+     "apples": 3,
+     "tick_ms": 104,
+     "combo_window": 6,
+     "skin": "skin:st_umbra",
+     "colors": [
+      "#2a1b3d",
+      "#5b3f8a",
+      "#b388ff"
+     ],
+     "modes": [],
+     "rewards": [
+      [
+       "points",
+       600000
+      ],
+      [
+       "crate",
+       "royal"
+      ],
+      [
+       "crate",
+       "royal"
+      ],
+      [
+       "item",
+       "skin:st_umbra"
+      ]
+     ],
+     "reward_names": [
+      "600,000 snake points",
+      "Royal Crate",
+      "Royal Crate",
+      "Shadow Coil"
+     ]
+    }
+   },
+   {
+    "num": 7,
+    "name": "Storm",
+    "blurb": "It only gets faster from here. Every bite speeds you up.",
+    "color": "#3f7fd6",
+    "levels": [
+     {
+      "id": "s7-01",
+      "num": 1,
+      "name": "Tailwind",
+      "w": 14,
+      "h": 11,
+      "modes": [],
+      "goal": 15,
+      "fruit_count": 2,
+      "tick_ms": 120.0,
+      "accel": 3.0,
+      "challenges": [
+       [
+        "time",
+        13500,
+        0
+       ],
+       [
+        "turns",
+        40,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 13.5 s or less",
+       "Finish with 40 turns or fewer"
+      ]
+     },
+     {
+      "id": "s7-02",
+      "num": 2,
+      "name": "Wraparound",
+      "w": 14,
+      "h": 12,
+      "modes": [
+       "borderless"
+      ],
+      "goal": 15,
+      "fruit_count": 2,
+      "tick_ms": 105.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        10500,
+        0
+       ],
+       [
+        "split",
+        7,
+        5000
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 10.5 s or less",
+       "Eat 7 fruit in 5.0 s or less"
+      ]
+     },
+     {
+      "id": "s7-03",
+      "num": 3,
+      "name": "Gale",
+      "w": 14,
+      "h": 12,
+      "modes": [
+       "wall"
+      ],
+      "goal": 15,
+      "fruit_count": 2,
+      "tick_ms": 115.0,
+      "accel": 3.0,
+      "challenges": [
+       [
+        "time",
+        12500,
+        0
+       ],
+       [
+        "turns",
+        45,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 12.5 s or less",
+       "Finish with 45 turns or fewer"
+      ]
+     },
+     {
+      "id": "s7-04",
+      "num": 4,
+      "name": "Lightning Fork",
+      "w": 15,
+      "h": 12,
+      "modes": [
+       "borderless",
+       "twin"
+      ],
+      "goal": 12,
+      "fruit_count": 2,
+      "tick_ms": 100.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        9500,
+        0
+       ],
+       [
+        "split",
+        6,
+        5000
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 9.5 s or less",
+       "Eat 6 fruit in 5.0 s or less"
+      ]
+     },
+     {
+      "id": "s7-05",
+      "num": 5,
+      "name": "Downpour",
+      "w": 15,
+      "h": 12,
+      "modes": [
+       "magnet"
+      ],
+      "goal": 20,
+      "fruit_count": 3,
+      "tick_ms": 110.0,
+      "accel": 3.0,
+      "challenges": [
+       [
+        "time",
+        10000,
+        0
+       ],
+       [
+        "turns",
+        36,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 10.0 s or less",
+       "Finish with 36 turns or fewer"
+      ]
+     },
+     {
+      "id": "s7-06",
+      "num": 6,
+      "name": "Eye of the Storm",
+      "w": 16,
+      "h": 12,
+      "modes": [
+       "borderless",
+       "wall"
+      ],
+      "goal": 15,
+      "fruit_count": 2,
+      "tick_ms": 98.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        10500,
+        0
+       ],
+       [
+        "split",
+        7,
+        5000
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 10.5 s or less",
+       "Eat 7 fruit in 5.0 s or less"
+      ]
+     },
+     {
+      "id": "s7-07",
+      "num": 7,
+      "name": "Thunderhead",
+      "w": 16,
+      "h": 13,
+      "modes": [
+       "borderless",
+       "dimension"
+      ],
+      "goal": 14,
+      "fruit_count": 2,
+      "tick_ms": 95.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        10500,
+        0
+       ],
+       [
+        "turns",
+        36,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 10.5 s or less",
+       "Finish with 36 turns or fewer"
+      ]
+     },
+     {
+      "id": "s7-08",
+      "num": 8,
+      "name": "Hailstones",
+      "w": 16,
+      "h": 13,
+      "modes": [
+       "shield",
+       "wall"
+      ],
+      "goal": 18,
+      "fruit_count": 2,
+      "tick_ms": 105.0,
+      "accel": 3.0,
+      "challenges": [
+       [
+        "time",
+        15500,
+        0
+       ],
+       [
+        "noshield",
+        0,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 15.5 s or less",
+       "Finish without losing a shield"
+      ]
+     },
+     {
+      "id": "s7-09",
+      "num": 9,
+      "name": "Cyclone",
+      "w": 16,
+      "h": 13,
+      "modes": [
+       "borderless",
+       "portal"
+      ],
+      "goal": 16,
+      "fruit_count": 2,
+      "tick_ms": 92.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        8000,
+        0
+       ],
+       [
+        "turns",
+        32,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 8.0 s or less",
+       "Finish with 32 turns or fewer"
+      ]
+     },
+     {
+      "id": "s7-10",
+      "num": 10,
+      "name": "Tempest",
+      "w": 18,
+      "h": 14,
+      "modes": [
+       "borderless",
+       "wall"
+      ],
+      "goal": 22,
+      "fruit_count": 3,
+      "tick_ms": 105.0,
+      "accel": 2.0,
+      "challenges": [
+       [
+        "time",
+        13000,
+        0
+       ],
+       [
+        "split",
+        11,
+        7500
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 13.0 s or less",
+       "Eat 11 fruit in 7.5 s or less"
+      ]
+     }
+    ],
+    "boss": {
+     "num": 7,
+     "id": "gearjaw",
+     "name": "Gearjaw",
+     "title": "the Iron Constrictor",
+     "taunt": "PROCESSING... TARGET IS SLOW. INCREASING TARGET SPEED.",
+     "attack": "overclock",
+     "attack_name": "Overclock",
+     "attack_desc": "Overclocks the arena: everything runs a third faster for 8 seconds.",
+     "attack_every": 12,
+     "w": 17,
+     "h": 13,
+     "apples": 3,
+     "tick_ms": 98,
+     "combo_window": 6,
+     "skin": "skin:st_gear",
+     "colors": [
+      "#5a6270",
+      "#aab3bf",
+      "#ff5252"
+     ],
+     "modes": [],
+     "rewards": [
+      [
+       "points",
+       1000000
+      ],
+      [
+       "crate",
+       "royal"
+      ],
+      [
+       "crate",
+       "royal"
+      ],
+      [
+       "item",
+       "skin:st_gear"
+      ]
+     ],
+     "reward_names": [
+      "1,000,000 snake points",
+      "Royal Crate",
+      "Royal Crate",
+      "Iron Constrictor"
+     ]
+    }
+   },
+   {
+    "num": 8,
+    "name": "Ouroboros Peak",
+    "blurb": "Everything you've learned, all at once, at full speed. The end is the beginning.",
+    "color": "#9c4dff",
+    "levels": [
+     {
+      "id": "s8-01",
+      "num": 1,
+      "name": "The Climb",
+      "w": 16,
+      "h": 13,
+      "modes": [
+       "key",
+       "wall"
+      ],
+      "goal": 15,
+      "fruit_count": 2,
+      "tick_ms": 92.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        25000,
+        0
+       ],
+       [
+        "turns",
+        85,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 25.0 s or less",
+       "Finish with 85 turns or fewer"
+      ]
+     },
+     {
+      "id": "s8-02",
+      "num": 2,
+      "name": "Thin Air",
+      "w": 16,
+      "h": 13,
+      "modes": [
+       "light",
+       "poison"
+      ],
+      "goal": 12,
+      "fruit_count": 3,
+      "tick_ms": 90.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        8000,
+        0
+       ],
+       [
+        "split",
+        6,
+        4000
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 8.0 s or less",
+       "Eat 6 fruit in 4.0 s or less"
+      ]
+     },
+     {
+      "id": "s8-03",
+      "num": 3,
+      "name": "Frozen Steps",
+      "w": 16,
+      "h": 13,
+      "modes": [
+       "gate",
+       "statue"
+      ],
+      "goal": 12,
+      "fruit_count": 2,
+      "tick_ms": 88.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        9500,
+        0
+       ],
+       [
+        "turns",
+        34,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 9.5 s or less",
+       "Finish with 34 turns or fewer"
+      ]
+     },
+     {
+      "id": "s8-04",
+      "num": 4,
+      "name": "Snowblind",
+      "w": 17,
+      "h": 13,
+      "modes": [
+       "arrow",
+       "light"
+      ],
+      "goal": 12,
+      "fruit_count": 2,
+      "tick_ms": 86.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        9000,
+        0
+       ],
+       [
+        "split",
+        6,
+        4500
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 9.0 s or less",
+       "Eat 6 fruit in 4.5 s or less"
+      ]
+     },
+     {
+      "id": "s8-05",
+      "num": 5,
+      "name": "Avalanche",
+      "w": 18,
+      "h": 14,
+      "modes": [
+       "magnet",
+       "wall"
+      ],
+      "goal": 22,
+      "fruit_count": 3,
+      "tick_ms": 95.0,
+      "accel": 2.0,
+      "challenges": [
+       [
+        "time",
+        11000,
+        0
+       ],
+       [
+        "turns",
+        47,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 11.0 s or less",
+       "Finish with 47 turns or fewer"
+      ]
+     },
+     {
+      "id": "s8-06",
+      "num": 6,
+      "name": "Rope Bridge",
+      "w": 17,
+      "h": 13,
+      "modes": [
+       "cheese",
+       "gate",
+       "portal"
+      ],
+      "goal": 14,
+      "fruit_count": 2,
+      "tick_ms": 84.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        7500,
+        0
+       ],
+       [
+        "split",
+        7,
+        3500
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 7.5 s or less",
+       "Eat 7 fruit in 3.5 s or less"
+      ]
+     },
+     {
+      "id": "s8-07",
+      "num": 7,
+      "name": "Summit Mines",
+      "w": 17,
+      "h": 13,
+      "modes": [
+       "minesweeper",
+       "wall"
+      ],
+      "goal": 12,
+      "fruit_count": 2,
+      "tick_ms": 82.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        8000,
+        0
+       ],
+       [
+        "turns",
+        35,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 8.0 s or less",
+       "Finish with 35 turns or fewer"
+      ]
+     },
+     {
+      "id": "s8-08",
+      "num": 8,
+      "name": "Mirrored Peaks",
+      "w": 16,
+      "h": 13,
+      "modes": [
+       "dimension",
+       "twin",
+       "wall"
+      ],
+      "goal": 14,
+      "fruit_count": 2,
+      "tick_ms": 80.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        10500,
+        0
+       ],
+       [
+        "split",
+        7,
+        5000
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 10.5 s or less",
+       "Eat 7 fruit in 5.0 s or less"
+      ]
+     },
+     {
+      "id": "s8-09",
+      "num": 9,
+      "name": "Last Light",
+      "w": 18,
+      "h": 14,
+      "modes": [
+       "light",
+       "poison",
+       "wall"
+      ],
+      "goal": 15,
+      "fruit_count": 3,
+      "tick_ms": 78.0,
+      "accel": 0.0,
+      "challenges": [
+       [
+        "time",
+        10000,
+        0
+       ],
+       [
+        "turns",
+        43,
+        0
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 10.0 s or less",
+       "Finish with 43 turns or fewer"
+      ]
+     },
+     {
+      "id": "s8-10",
+      "num": 10,
+      "name": "Ouroboros' Door",
+      "w": 18,
+      "h": 14,
+      "modes": [
+       "arrow",
+       "gate",
+       "key",
+       "wall"
+      ],
+      "goal": 18,
+      "fruit_count": 2,
+      "tick_ms": 85.0,
+      "accel": 1.5,
+      "challenges": [
+       [
+        "time",
+        26500,
+        0
+       ],
+       [
+        "split",
+        9,
+        13500
+       ]
+      ],
+      "challenge_text": [
+       "Finish in 26.5 s or less",
+       "Eat 9 fruit in 13.5 s or less"
+      ]
+     }
+    ],
+    "boss": {
+     "num": 8,
+     "id": "ouroboros",
+     "name": "The Ouroboros",
+     "title": "the Endless One",
+     "taunt": "Every story ends where it began. Yours ends here.",
+     "attack": "chaos",
+     "attack_name": "Endless Cycle",
+     "attack_desc": "Every trick the other bosses taught you, one after another.",
+     "attack_every": 10,
+     "w": 18,
+     "h": 14,
+     "apples": 4,
+     "tick_ms": 92,
+     "combo_window": 5,
+     "skin": "skin:st_ouroboros",
+     "colors": [
+      "#0f3d2e",
+      "#2fbf71",
+      "#ffd54f"
+     ],
+     "modes": [],
+     "rewards": [
+      [
+       "points",
+       2500000
+      ],
+      [
+       "crate",
+       "royal"
+      ],
+      [
+       "crate",
+       "royal"
+      ],
+      [
+       "crate",
+       "royal"
+      ],
+      [
+       "item",
+       "skin:st_ouroboros"
+      ]
+     ],
+     "reward_names": [
+      "2,500,000 snake points",
+      "Royal Crate",
+      "Royal Crate",
+      "Royal Crate",
+      "The Ouroboros"
+     ]
+    }
+   }
+  ]
+ },
  "pass_only": [
   "skin:borealis",
   "skin:champion",

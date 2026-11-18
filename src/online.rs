@@ -59,6 +59,8 @@ pub enum Req {
     Replay(String),
     Jackpot,
     JackpotEnter,
+    Story,
+    StoryRun,
 }
 
 #[derive(Clone, Copy, PartialEq, Debug)]
@@ -77,6 +79,8 @@ pub enum Notice {
     RunResult(Value),
     Reward(Value),
     MatchStarted,
+    DuelStarted,
+    DuelOver(Value),
     MatchOver(Value),
     Lobby,
     LeftMatch,
@@ -101,6 +105,26 @@ pub struct Match {
     pub pending: Vec<(Dir, f64, i64)>,
     /// Time since the latest state arrived (for drawing in between).
     pub acc: f64,
+}
+
+/// A story-mode boss duel. Your board is the `Match` in `Online::game` (so turns, lag
+/// prediction and drawing work as in versus); the boss's board and the duel's extras are here.
+pub struct DuelInfo {
+    /// The story boss (1..8), or 0 for an online battle.
+    pub boss: usize,
+    /// Which board is yours.
+    pub you: usize,
+    /// Every board (yours is drawn from the `Match`, which predicts your turns).
+    pub boards: Vec<Game>,
+    /// Who's on each board: {name, avatar, bot}.
+    pub players: Vec<Value>,
+    /// The latest state's two sides: chain, incoming junk, fog, arrows, melting walls...
+    pub sides: Value,
+    pub next_signature: i64,
+    pub sudden: bool,
+    /// Duel events not yet animated: [kind, side, amount, extra].
+    pub events: Vec<Value>,
+    pub result: Option<Value>,
 }
 
 pub struct Online {
@@ -151,6 +175,9 @@ pub struct Online {
     pub my_id: Option<i64>,
     pub room: Option<Value>,
     pub game: Option<Match>,
+    pub duel: Option<DuelInfo>,
+    /// Story mode: the chapters with your stars (from the server, or the catalogue when logged out).
+    pub story: Option<Value>,
     pub ping_ms: Option<f64>,
     last_ping: f64,
     last_hello: f64,
@@ -197,6 +224,8 @@ impl Online {
             my_id: None,
             room: None,
             game: None,
+            duel: None,
+            story: None,
             ping_ms: None,
             last_ping: 0.0,
             last_hello: -1e9,
@@ -410,6 +439,18 @@ impl Online {
             Req::Leaderboard(cat) => {
                 if ok {
                     self.leaderboards.insert(cat, d);
+                }
+            }
+            Req::Story => {
+                if ok {
+                    self.story = Some(d);
+                }
+            }
+            Req::StoryRun => {
+                self.notices.push(Notice::RunResult(if ok { d.clone() } else { json!({"error": err}) }));
+                if ok {
+                    self.refresh_me();
+                    self.get("/api/story", Req::Story);
                 }
             }
             Req::SubmitRun => {
@@ -768,6 +809,14 @@ impl Online {
         self.send(json!({"t": "leave"}));
         self.room = None;
         self.game = None;
+        self.duel = None;
+    }
+
+    /// Fight a story boss (the server checks it's unlocked).
+    pub fn start_duel(&mut self, boss: usize) {
+        self.game = None;
+        self.duel = None;
+        self.send(json!({"t": "duel", "boss": boss}));
     }
 
     pub fn is_host(&self) -> bool {
@@ -780,6 +829,63 @@ impl Online {
     fn on_message(&mut self, m: Value, now_ms: f64) {
         match m["t"].as_str().unwrap_or("") {
             "welcome" => self.my_id = m["id"].as_i64(),
+            "duel_start" => {
+                let sides = m["state"]["sides"].as_array().cloned().unwrap_or_default();
+                let battle = m["mode"] == "battle";
+                let you = if battle { m["you"].as_u64().unwrap_or(0) as usize } else { 0 };
+                let boards: Vec<Game> = sides.iter().map(|st| {
+                    let mut g = Game::new(8, 5, &[], 1, "apple", PyRandom::new(0));
+                    apply_duel_side(&mut g, st);
+                    g.prev = g.snapshot();
+                    g
+                }).collect();
+                let Some(mine) = boards.get(you).cloned() else { return };
+                if !battle {
+                    self.room = None;
+                }
+                let players = if battle { m["players"].as_array().cloned().unwrap_or_default() } else { Vec::new() };
+                self.game = Some(Match { game: mine, you: 0, tick_ms: m["tick_ms"].as_f64().unwrap_or(130.0), countdown: Some(3),
+                                         result: None, reward: None, pending: Vec::new(), acc: 0.0 });
+                self.duel = Some(DuelInfo { boss: if battle { 0 } else { m["boss"].as_u64().unwrap_or(1) as usize }, you, boards,
+                                            players, sides: Value::Array(sides), next_signature: 0, sudden: false,
+                                            events: Vec::new(), result: None });
+                self.notices.push(Notice::DuelStarted);
+            }
+            "duel_countdown" => {
+                if let Some(g) = self.game.as_mut() {
+                    let n = m["n"].as_i64().unwrap_or(0);
+                    g.countdown = if n > 0 { Some(n) } else { None };
+                    self.notices.push(Notice::Sound(if n > 0 { "tick" } else { "start" }));
+                }
+            }
+            "duel_state" => {
+                let s = &m["s"];
+                if let (Some(mt), Some(du)) = (self.game.as_mut(), self.duel.as_mut()) {
+                    apply_duel_side(&mut mt.game, &s["sides"][du.you]);
+                    mt.tick_ms = s["tick_ms"].as_f64().unwrap_or(mt.tick_ms);
+                    mt.acc = (mt.acc - mt.tick_ms).max(0.0).min(mt.tick_ms * 0.5);
+                    predict(mt, now_ms);
+                    for (i, b) in du.boards.iter_mut().enumerate() {
+                        if i != du.you {
+                            apply_duel_side(b, &s["sides"][i]);
+                        }
+                    }
+                    du.sides = s["sides"].clone();
+                    du.next_signature = s["next_signature"].as_i64().unwrap_or(0);
+                    du.sudden = s["sudden"] == true;
+                    du.events.extend(s["events"].as_array().cloned().unwrap_or_default());
+                }
+            }
+            "duel_over" => {
+                if let Some(du) = self.duel.as_mut() {
+                    du.result = Some(m.clone());
+                }
+                if m["won"] == true {
+                    self.refresh_me();
+                }
+                self.get("/api/story", Req::Story);
+                self.notices.push(Notice::DuelOver(m));
+            }
             "error" => {
                 let msg = m["msg"].as_str().unwrap_or("Error").to_string();
                 self.say(msg, Tone::Bad);
@@ -789,6 +895,7 @@ impl Online {
                 self.room = Some(m);
                 if back_to_lobby {
                     self.game = None;
+                    self.duel = None;
                     self.notices.push(Notice::Lobby);
                 }
             }
@@ -935,6 +1042,17 @@ impl Online {
         predict(mt, now_ms);
         self.send(json!({"t": "input", "d": d.name(), "step": step}));
         true
+    }
+}
+
+/// A duel side's state onto a board: the usual state, plus its arrow tiles.
+fn apply_duel_side(g: &mut Game, st: &Value) {
+    apply_state(g, st);
+    g.arrows.clear();
+    for a in st["arrows"].as_array().cloned().unwrap_or_default() {
+        if let Some(d) = Dir::parse(a[2].as_str().unwrap_or("")) {
+            g.arrows.insert((a[0].as_i64().unwrap_or(0) as i32, a[1].as_i64().unwrap_or(0) as i32), d);
+        }
     }
 }
 

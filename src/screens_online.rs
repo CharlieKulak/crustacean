@@ -6,7 +6,7 @@ use crate::online::{urlencode, Req};
 use crate::screens_main::toggle_mode;
 use crate::ui::*;
 use macroquad::prelude::*;
-use serde_json::json;
+use serde_json::{json, Value};
 
 impl App {
     pub fn online_screen(&mut self) {
@@ -98,6 +98,51 @@ impl App {
         self.ui.end_scroll();
     }
 
+    /// A battle's lobby: up to four players (people or bots), each on their own board.
+    fn battle_players(&mut self, room: &Value, players: &[Value], r: Rect, host: bool, my_id: Option<i64>) {
+        let u = self.ui.u;
+        self.ui.card(r);
+        rounded(Rect::new(r.x + 16.0 * u, r.y, r.w - 32.0 * u, 5.0 * u), 2.5 * u, C_PURPLE);
+        self.ui.text(&format!("Players {} / 4", players.len()), r.x + 20.0 * u, r.y + 30.0 * u, 18.0, C_PURPLE, Align::Left, true);
+        self.ui.text("Everyone gets their own board. Combos send junk to the others; the last snake going wins.",
+                     r.x + 20.0 * u, r.y + 54.0 * u, 13.0, MUTED, Align::Left, false);
+        let cols = 2;
+        let cw = (r.w - 24.0 * u - 12.0 * u) / cols as f32;
+        for (i, p) in players.iter().enumerate() {
+            let pr = Rect::new(r.x + 12.0 * u + (i % cols) as f32 * (cw + 12.0 * u), r.y + 76.0 * u + (i / cols) as f32 * 66.0 * u, cw, 58.0 * u);
+            let me = p["id"].as_i64() == my_id;
+            rounded(pr, 10.0 * u, if me { CARD_HI } else { alpha(CARD_HI, 0.5) });
+            let name = p["name"].as_str().unwrap_or("").to_string();
+            let bot = !p["bot"].is_null() && p["bot"] != false;
+            if bot {
+                draw_circle(pr.x + 30.0 * u, pr.y + 29.0 * u, 19.0 * u, rgb(80, 90, 110));
+                draw_icon("gear", pr.x + 30.0 * u, pr.y + 29.0 * u, 20.0 * u, WHITE);
+            } else {
+                crate::screens_social::avatar(self, vec2(pr.x + 30.0 * u, pr.y + 29.0 * u), 19.0 * u, p["avatar"].as_str().unwrap_or(""), &name);
+            }
+            let label = if me { format!("{name} (you)") } else { name };
+            self.ui.text(&label, pr.x + 60.0 * u, pr.y + 20.0 * u, 15.0, INK, Align::Left, true);
+            self.ui.text(p["rank"].as_str().unwrap_or(""), pr.x + 60.0 * u, pr.y + 40.0 * u, 12.0, MUTED, Align::Left, false);
+            if room["host"] == p["id"] {
+                draw_icon("crown", pr.x + pr.w - 24.0 * u, pr.y + 29.0 * u, 18.0 * u, C_GOLD);
+            } else if host && bot && self.ui.button_icon("", "x", Rect::new(pr.x + pr.w - 44.0 * u, pr.y + 11.0 * u, 36.0 * u, 36.0 * u), Style::Ghost) {
+                self.online.send(json!({"t": "remove_bot", "id": p["id"]}));
+            }
+        }
+        if host && players.len() < 4 {
+            let level = self.fields.get("bot0").cloned().unwrap_or_else(|| "normal".into());
+            let br = Rect::new(r.x + 12.0 * u, r.y + r.h - 54.0 * u, 220.0 * u, 42.0 * u);
+            if self.ui.button_icon(&format!("Add a bot ({level})"), "plus", br, Style::Secondary) {
+                self.online.send(json!({"t": "add_bot", "team": 0, "level": level}));
+            }
+            for (k, l) in ["easy", "normal", "hard"].iter().enumerate() {
+                if self.ui.chip(l, level == *l, Rect::new(br.x + br.w + 12.0 * u + k as f32 * 92.0 * u, br.y + 5.0 * u, 84.0 * u, 32.0 * u), C_BLUE) {
+                    self.fields.insert("bot0", l.to_string());
+                }
+            }
+        }
+    }
+
     fn host_card(&mut self, r: Rect) {
         let u = self.ui.u;
         self.ui.card(r);
@@ -106,6 +151,16 @@ impl App {
         let mut y = r.y + 28.0 * u;
         self.ui.text("Host a match", x, y, 20.0, INK, Align::Left, true);
         y += 26.0 * u;
+        // the format: one shared board, or everyone on their own (Puyo style)
+        let half = (w - 10.0 * u) / 2.0;
+        let battle = self.settings.vs_format == "battle";
+        if self.ui.chip("Classic", !battle, Rect::new(x, y, half, 40.0 * u), ACCENT) {
+            self.settings.vs_format = "classic".into();
+        }
+        if self.ui.chip("Puyo battle (2-4)", battle, Rect::new(x + half + 10.0 * u, y, half, 40.0 * u), C_PURPLE) {
+            self.settings.vs_format = "battle".into();
+        }
+        y += 50.0 * u;
         // ranked or not
         let half = (w - 10.0 * u) / 2.0;
         if self.ui.chip("Ranked", self.settings.vs_ranked, Rect::new(x, y, half, 40.0 * u), C_GOLD) {
@@ -115,7 +170,7 @@ impl App {
             self.settings.vs_ranked = false;
         }
         y += 50.0 * u;
-        let note = if self.settings.vs_ranked { "Wins and losses against people change your rank points." } else { "Just for fun: no rank points won or lost. Still earns snake points." };
+        let note = if battle { "Battles are unranked: everyone on their own board, combos send junk, last snake wins." } else if self.settings.vs_ranked { "Wins and losses against people change your rank points." } else { "Just for fun: no rank points won or lost. Still earns snake points." };
         self.ui.text(note, x, y + 4.0 * u, 12.0, MUTED, Align::Left, false);
         y += 26.0 * u;
         self.ui.text("Board", x, y + 10.0 * u, 15.0, MUTED, Align::Left, true);
@@ -133,15 +188,17 @@ impl App {
         self.settings.vs_speed = (v * 4.0).round() / 4.0;
         self.ui.text(crate::settings::speed_label(self.settings.vs_speed), x + w, y + 12.0 * u, 13.0, ACCENT, Align::Right, true);
         y += 40.0 * u;
-        self.ui.text("Win by", x, y + 12.0 * u, 15.0, MUTED, Align::Left, true);
-        let goals = [(0, "Last alive"), (10, "10 fruit"), (20, "20 fruit"), (40, "40 fruit")];
-        let gw = (w - 90.0 * u - 24.0 * u) / 4.0;
-        for (i, (g, l)) in goals.iter().enumerate() {
-            if self.ui.chip(l, self.settings.vs_goal == *g, Rect::new(x + 90.0 * u + i as f32 * (gw + 8.0 * u), y, gw, 32.0 * u), ACCENT) {
-                self.settings.vs_goal = *g;
+        if !battle {
+            self.ui.text("Win by", x, y + 12.0 * u, 15.0, MUTED, Align::Left, true);
+            let goals = [(0, "Last alive"), (10, "10 fruit"), (20, "20 fruit"), (40, "40 fruit")];
+            let gw = (w - 90.0 * u - 24.0 * u) / 4.0;
+            for (i, (g, l)) in goals.iter().enumerate() {
+                if self.ui.chip(l, self.settings.vs_goal == *g, Rect::new(x + 90.0 * u + i as f32 * (gw + 8.0 * u), y, gw, 32.0 * u), ACCENT) {
+                    self.settings.vs_goal = *g;
+                }
             }
+            y += 44.0 * u;
         }
-        y += 44.0 * u;
         self.ui.text("Modes", x, y + 10.0 * u, 15.0, MUTED, Align::Left, true);
         y += 26.0 * u;
         let modes = catalog().versus_modes.clone();
@@ -162,7 +219,8 @@ impl App {
             self.settings.save();
             let s = &self.settings;
             let msg = json!({"t": "host", "ranked": s.vs_ranked, "public": s.vs_public,
-                             "settings": {"size": s.vs_size, "speed": s.vs_speed, "apples": s.vs_apples, "goal": s.vs_goal, "modes": s.vs_modes}});
+                             "settings": {"size": s.vs_size, "speed": s.vs_speed, "apples": s.vs_apples, "goal": s.vs_goal, "modes": s.vs_modes,
+                                          "format": s.vs_format}});
             self.online.send(msg);
             self.go(Screen::Lobby);
         }
@@ -193,9 +251,18 @@ impl App {
         let modes: Vec<String> = s["modes"].as_array().map(|a| a.iter().filter_map(|x| x.as_str().map(String::from)).collect()).unwrap_or_default();
         let goal = s["goal"].as_i64().unwrap_or(0);
         let info = format!("{} board  ·  {}  ·  {}  ·  {}", s["size"].as_str().unwrap_or(""), crate::settings::speed_label(s["speed"].as_f64().unwrap_or(0.5) as f32),
-                           if goal > 0 { format!("first to {goal}") } else { "last team alive".into() }, catalog().mode_label(&modes));
+                           if s["format"] == "battle" { "last snake standing".into() } else if goal > 0 { format!("first to {goal}") } else { "last team alive".into() },
+                           catalog().mode_label(&modes));
         self.ui.text(&info, head.x + 160.0 * u, head.y + 34.0 * u, 14.0, MUTED, Align::Left, false);
+        let battle = s["format"] == "battle";
         if host {
+            let cx = head.x + 160.0 * u;
+            let fr = Rect::new(cx + 250.0 * u, head.y + 50.0 * u, 160.0 * u, 30.0 * u);
+            if self.ui.chip(if battle { "Puyo battle" } else { "Classic" }, battle, fr, C_PURPLE) {
+                self.online.send(json!({"t": "settings", "settings": {"format": if battle { "classic" } else { "battle" }}}));
+            }
+        }
+        if host && !battle {
             let cx = head.x + 160.0 * u;
             if self.ui.chip(if ranked { "Ranked" } else { "Unranked" }, true, Rect::new(cx, head.y + 50.0 * u, 120.0 * u, 30.0 * u), if ranked { C_GOLD } else { C_BLUE }) {
                 self.online.send(json!({"t": "details", "ranked": !ranked}));
@@ -203,8 +270,11 @@ impl App {
             if self.ui.chip(if public { "Public" } else { "Private" }, public, Rect::new(cx + 130.0 * u, head.y + 50.0 * u, 110.0 * u, 30.0 * u), ACCENT) {
                 self.online.send(json!({"t": "details", "public": !public}));
             }
+        } else if !host {
+            let tag = if battle { "PUYO BATTLE" } else if ranked { "RANKED" } else { "UNRANKED" };
+            self.ui.text(tag, head.x + 160.0 * u, head.y + 64.0 * u, 13.0, if battle { C_PURPLE } else if ranked { C_GOLD } else { MUTED }, Align::Left, true);
         } else {
-            self.ui.text(if ranked { "RANKED" } else { "UNRANKED" }, head.x + 160.0 * u, head.y + 64.0 * u, 13.0, if ranked { C_GOLD } else { MUTED }, Align::Left, true);
+            self.ui.text("Unranked: everyone on their own board", head.x + 160.0 * u, head.y + 64.0 * u, 13.0, MUTED, Align::Left, true);
         }
         if self.ui.button("Leave", Rect::new(head.x + head.w - 130.0 * u, head.y + 22.0 * u, 110.0 * u, 46.0 * u), Style::Secondary) {
             self.online.leave_match();
@@ -217,7 +287,10 @@ impl App {
         let side_w = if area.w > 900.0 * u { 300.0 * u } else { 0.0 };
         let tw = (area.w - side_w - 16.0 * u - if side_w > 0.0 { 16.0 * u } else { 0.0 }) / 2.0;
         let th = area.h - head.h - 16.0 * u - 86.0 * u;
-        for team in 0..2 {
+        if battle {
+            self.battle_players(&room, &players, Rect::new(area.x, teams_y, tw * 2.0 + 16.0 * u, th), host, my_id);
+        }
+        for team in 0..(if battle { 0 } else { 2 }) {
             let r = Rect::new(area.x + team as f32 * (tw + 16.0 * u), teams_y, tw, th);
             let col = if team == 0 { C_BLUE } else { rgb(255, 140, 70) };
             self.ui.card(r);

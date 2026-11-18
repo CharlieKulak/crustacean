@@ -672,6 +672,23 @@ pub fn draw_snake(g: &Game, idx: usize, t: f32, skin: &Skin, board: &Rect, c: f3
     if skin.pattern == "dunce" {
         dunce_cap(head, c, fade);
     }
+    if skin.pattern == "moderator" {
+        mod_badge(head, c, fade);
+    }
+}
+
+/// The Moderator skin's badge: a gold shield with a star, on the snake's head.
+pub fn mod_badge(head: Vec2, c: f32, fade: f32) {
+    let p = head + vec2(0.0, -c * 0.62);
+    let s = c * 0.34;
+    let gold = alpha(rgb(250, 204, 21), fade);
+    draw_circle(p.x + c * 0.04, p.y + c * 0.04, s * 1.05, alpha(BLACK, 0.2 * fade));
+    draw_rectangle(p.x - s, p.y - s * 0.8, s * 2.0, s * 0.9, gold);
+    draw_triangle(vec2(p.x - s, p.y + s * 0.1), vec2(p.x + s, p.y + s * 0.1), vec2(p.x, p.y + s * 1.15), gold);
+    draw_rectangle(p.x - s * 0.8, p.y - s * 0.62, s * 1.6, s * 0.7, alpha(rgb(29, 78, 216), fade));
+    draw_triangle(vec2(p.x - s * 0.8, p.y + s * 0.08), vec2(p.x + s * 0.8, p.y + s * 0.08), vec2(p.x, p.y + s * 0.9),
+                  alpha(rgb(29, 78, 216), fade));
+    crate::ui::star(p.x, p.y + s * 0.05, s * 0.55, s * 0.24, gold);
 }
 
 /// A dunce cap on a snake's head (the "dunce" skin): a tall paper cone with a D on it.
@@ -840,6 +857,9 @@ pub fn skin_preview(skin: &Skin, r: Rect, now: f64) {
     }
     if skin.pattern == "dunce" {
         dunce_cap(head, c, 1.0);
+    }
+    if skin.pattern == "moderator" {
+        mod_badge(head, c, 1.0);
     }
 }
 

@@ -33,6 +33,8 @@ pub enum Screen {
     Leaderboard,
     Packs,
     Settings,
+    Story,
+    Duel,
 }
 
 /// A game being played on this computer (a round or a speedrun).
@@ -123,6 +125,9 @@ pub struct App {
     pub trade_draft: Option<TradeDraft>,
     /// The jackpot: what you've picked to put in, the last draw shown, and the draw animation.
     pub jackpot_pick: Vec<String>,
+    /// Story mode: the level or boss whose card is open ("s1-03", "boss-1").
+    pub story_pick: Option<String>,
+    pub duel_fx: crate::screens_story::DuelFx,
     pub jackpot_seen: Option<i64>,
     pub jackpot_anim: Option<(Value, f64)>,
     /// Another OpenSnake game is running on this computer: wait for it to close.
@@ -206,6 +211,8 @@ impl App {
             draft: None,
             trade_draft: None,
             jackpot_pick: Vec::new(),
+            story_pick: None,
+            duel_fx: Default::default(),
             jackpot_seen: None,
             jackpot_anim: None,
             blocked,
@@ -285,6 +292,7 @@ impl App {
                 o.get("/api/messages", Req::Chats);
             }
             Screen::Online => o.get("/api/matches", Req::Matches),
+            Screen::Story => o.get("/api/story", Req::Story),
             _ => {}
         }
     }
@@ -336,6 +344,41 @@ impl App {
             "leaderboard" => (Screen::Leaderboard, 0),
             "packs" => (Screen::Packs, 0),
             "settings" => (Screen::Settings, 0),
+            "story" => (Screen::Story, 0),
+            "storylevel" => {
+                self.story_pick = Some("s1-01".into());
+                (Screen::Story, 0)
+            }
+            _ if name.starts_with("boss") => {
+                let n: usize = name[4..].parse().unwrap_or(1);
+                self.story_pick = Some(format!("boss-{n}"));
+                (Screen::Story, n - 1)
+            }
+            "storyplay" => {
+                let ch = catalog().story["chapters"][0].clone();
+                if let Some(cat) = crate::screens_story::level_category(&ch, &ch["levels"][2]) {
+                    self.start_run(cat, Screen::Story);
+                    if let Some(p) = self.play.as_mut() {
+                        if let Some(r) = p.run.as_mut() {
+                            r.input(Dir::Up);
+                        }
+                    }
+                }
+                return;
+            }
+            "battle" | "battlelobby" => {
+                let bots: Vec<_> = ["easy", "normal", "hard"].iter().map(|l| serde_json::json!({"team": 1, "level": l})).collect();
+                self.online.send(serde_json::json!({"t": "host", "ranked": false, "public": false, "bots": bots,
+                    "settings": {"format": "battle", "size": "small", "speed": 0.5, "apples": 3, "modes": []}}));
+                if name == "battle" {
+                    self.online.send(serde_json::json!({"t": "start"}));
+                }
+                (Screen::Lobby, 0)
+            }
+            "duel" => {
+                self.online.start_duel(1);
+                (Screen::Story, 0)
+            }
             "play" | "play3d" | "mines" | "mines3d" => {
                 self.settings.view3d = name.ends_with("3d");
                 self.settings.modes = if name.starts_with("mines") { vec!["minesweeper".into()] }
@@ -481,6 +524,8 @@ impl App {
             Screen::Leaderboard => self.leaderboard_screen(),
             Screen::Packs => self.packs_screen(),
             Screen::Settings => self.settings_screen(),
+            Screen::Story => self.story_screen(),
+            Screen::Duel => self.duel_screen(),
         }
         // a quick fade as a new screen comes in
         if enter < 1.0 {
@@ -595,13 +640,24 @@ impl App {
                     self.fx = Effects::default();
                     self.go(Screen::Versus);
                 }
+                Notice::DuelStarted => {
+                    self.fx = Effects::default();
+                    self.duel_fx = crate::screens_story::DuelFx::default();
+                    self.go(Screen::Duel);
+                }
+                Notice::DuelOver(m) => {
+                    self.sfx.play(if m["won"] == true { "reveal" } else { "die" });
+                    for o in m["opened"].as_array().cloned().unwrap_or_default() {
+                        self.reveal_queue.push(o);
+                    }
+                }
                 Notice::MatchOver(m) => {
                     let mine = self.online.game.as_ref().and_then(|mt| mt.game.snakes.get(mt.you).map(|s| s.team));
                     let won = mine.is_some() && m["winner"].as_i64().map(|w| w as i32) == mine;
                     self.sfx.play(if won { "win" } else { "die" });
                 }
                 Notice::Lobby => {
-                    if self.screen == Screen::Versus || self.screen == Screen::Online {
+                    if matches!(self.screen, Screen::Versus | Screen::Online | Screen::Duel) {
                         self.go(Screen::Lobby);
                     }
                 }
@@ -739,7 +795,7 @@ impl App {
                     self.sfx.play("turn");
                 }
             }
-            Screen::Versus => {
+            Screen::Versus | Screen::Duel => {
                 let now = self.now_ms();
                 if self.online.turn(d, now) {
                     self.sfx.play("turn");
@@ -827,7 +883,7 @@ impl App {
                 }
                 self.drain();
             }
-            Screen::Versus => {
+            Screen::Versus | Screen::Duel => {
                 self.read_controls();
                 if let Some(mt) = self.online.game.as_mut() {
                     mt.acc = (mt.acc + dt).min(mt.tick_ms * 1.5);
@@ -840,7 +896,7 @@ impl App {
 
     /// Sounds and effects for what just happened in the game.
     fn drain(&mut self) {
-        let versus = self.screen == Screen::Versus;
+        let versus = matches!(self.screen, Screen::Versus | Screen::Duel);
         let events = if versus {
             match self.online.game.as_mut() {
                 Some(mt) => std::mem::take(&mut mt.game.events),
@@ -900,13 +956,17 @@ impl App {
                     let t = r.time_ms();
                     let id = r.category.id.clone();
                     if self.settings.pbs.get(&id).is_none_or(|&pb| t < pb) {
-                        self.settings.pbs.insert(id, t);
+                        self.settings.pbs.insert(id.clone(), t);
                         p.new_best = true;
                     }
                     if logged_in {
                         let date = iso_now();
                         let file = r.to_json(&name, VERSION, &date);
-                        self.online.post("/api/runs", file, Req::SubmitRun);
+                        if id.starts_with("story-") {
+                            self.online.post("/api/story/run", file, Req::StoryRun);
+                        } else {
+                            self.online.post("/api/runs", file, Req::SubmitRun);
+                        }
                     }
                     self.settings.save();
                 }
@@ -1066,6 +1126,7 @@ impl App {
                 }
             }
         }
+        self.story_hud();
         // keys
         if self.ui.hotkey(KeyCode::R) {
             self.restart();
@@ -1129,6 +1190,10 @@ impl App {
                     self.leave_play();
                 }
             }
+            return;
+        }
+        if p.run.as_ref().is_some_and(|r| r.category.id.starts_with("story-")) {
+            self.story_over_card();
             return;
         }
         let (title, sub, extra) = match &p.run {
@@ -1328,7 +1393,7 @@ impl App {
         }
         let invite = self.online.invite.clone();
         if let Some((m, _)) = invite {
-            if !matches!(self.screen, Screen::Versus | Screen::Play) {
+            if !matches!(self.screen, Screen::Versus | Screen::Play | Screen::Duel) {
                 let u = self.ui.u;
                 let r = Rect::new(self.ui.w - 380.0 * u, 84.0 * u, 360.0 * u, 120.0 * u);
                 self.ui.card(r);

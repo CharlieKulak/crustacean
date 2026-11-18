@@ -14,6 +14,7 @@ pub mod screens_main;
 pub mod screens_online;
 pub mod screens_shop;
 pub mod screens_social;
+pub mod screens_story;
 pub mod settings;
 pub mod speedrun;
 pub mod ui;

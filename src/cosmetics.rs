@@ -101,6 +101,8 @@ pub struct Catalog {
     pub untradeable: Vec<String>,
     pub categories: Vec<crate::speedrun::Category>,
     pub economy: Value,
+    /// Story mode: chapters, levels and bosses.
+    pub story: Value,
     pub pack_colors: HashMap<String, HashMap<String, Rgb>>,
 }
 
@@ -153,6 +155,7 @@ pub fn catalog() -> &'static Catalog {
             untradeable: serde_json::from_value(v["untradeable"].clone()).unwrap(),
             categories: serde_json::from_value(v["categories"].clone()).unwrap(),
             economy: v["economy"].clone(),
+            story: v["story"].clone(),
             pack_colors,
         }
     })
@@ -344,6 +347,18 @@ pub fn skin_color(skin: &Skin, i: usize, n: usize, now: f64) -> Rgb {
             let base = lerp(c[0], c[1], 0.3 + 0.3 * (fi * 0.8 + now / 300.0).sin());
             let on = hash01(i as i64, (now / 90.0).floor() as i64) > 0.88;
             lerp(base, c[2], if on { 1.0 } else { 0.0 })
+        }
+        "ouroboros" => {
+            // emerald scales, with a golden ring chasing round from tail to head
+            let base = lerp(c[0], c[1], 0.5 + 0.5 * (i as f64 * 0.9 + now / 400.0).sin());
+            let ring = (n as f64 + 4.0) - (now / 85.0).rem_euclid(n as f64 + 8.0);
+            lerp(base, c[2], (1.0 - (i as f64 - ring).abs() / 2.2).max(0.0))
+        }
+        "moderator" => {
+            // navy and blue bands with a gold sweep, like a badge catching the light
+            let base = if (i / 2) % 2 == 1 { c[1] } else { c[0] };
+            let sweep = (now / 70.0).rem_euclid(n as f64 + 10.0) - 5.0;
+            lerp(base, c[2], (1.0 - (i as f64 - sweep).abs() / 1.8).max(0.0))
         }
         // paper like a dunce cap: cream, with a grey band every few cells
         "dunce" => if i % 4 == 3 { c[1] } else { c[0] },

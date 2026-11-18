@@ -29,6 +29,8 @@ pub struct Settings {
     pub pack: String,
     // versus hosting
     pub vs_size: String,
+    /// "classic" (one board, teams) or "battle" (everyone on their own board, Puyo style).
+    pub vs_format: String,
     pub vs_speed: f32,
     pub vs_apples: i32,
     pub vs_goal: i32,
@@ -59,6 +61,7 @@ impl Default for Settings {
             pbs: HashMap::new(),
             pack: String::new(),
             vs_size: "medium".into(),
+            vs_format: "classic".into(),
             vs_speed: 0.5,
             vs_apples: 3,
             vs_goal: 0,
