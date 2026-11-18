@@ -51,6 +51,8 @@ pub struct PlayState {
     pub pb_before: Option<i64>,
     /// Watching a world record (its inputs play themselves), not playing.
     pub replay: Option<Replay>,
+    /// A plain round's seed, settings and turns, so the server can replay it to check what it pays.
+    pub round: Option<(i64, Value, Vec<(i64, Dir)>)>,
 }
 
 /// A world record run being watched.
@@ -379,6 +381,19 @@ impl App {
                 self.online.start_duel(1);
                 (Screen::Story, 0)
             }
+            "roundtest" => {
+                // (a small board full of fruit, Accelerate on: a round that eats some, to check with the server)
+                self.settings.modes = Vec::new();
+                self.settings.board_w = 10;
+                self.settings.board_h = 9;
+                self.settings.fruit_count = 40;
+                self.settings.accelerate = true;
+                self.start_round();
+                for d in [Dir::Up, Dir::Right] {
+                    self.steer(d);
+                }
+                return;
+            }
             "play" | "play3d" | "mines" | "mines3d" => {
                 self.settings.view3d = name.ends_with("3d");
                 self.settings.modes = if name.starts_with("mines") { vec!["minesweeper".into()] }
@@ -386,9 +401,7 @@ impl App {
                 self.settings.fruit_count = 3;
                 self.start_round();
                 for d in [Dir::Up, Dir::Right] {
-                    if let Some(p) = self.play.as_mut() {
-                        p.game_mut().input(d);
-                    }
+                    self.steer(d); // (as if pressed: logged for the server to check)
                 }
                 return;
             }
@@ -460,9 +473,7 @@ impl App {
                 self.settings.fruit_count = 300 * 300 - 4;
                 self.start_round();
                 for d in [Dir::Up, Dir::Right] {
-                    if let Some(p) = self.play.as_mut() {
-                        p.game_mut().input(d);
-                    }
+                    self.steer(d); // (as if pressed: logged for the server to check)
                 }
                 return;
             }
@@ -474,9 +485,7 @@ impl App {
                 self.settings.fruit_count = 40;
                 self.start_round();
                 for d in [Dir::Up, Dir::Right] {
-                    if let Some(p) = self.play.as_mut() {
-                        p.game_mut().input(d);
-                    }
+                    self.steer(d); // (as if pressed: logged for the server to check)
                 }
                 return;
             }
@@ -698,8 +707,12 @@ impl App {
         let modes: Vec<&str> = s.modes.iter().map(|m| m.as_str()).collect();
         let seed = (rand::rand() as i64) & 0x7fff_ffff;
         let game = Game::new(s.board_w, s.board_h, &modes, s.fruit_count, &s.fruit, PyRandom::new(seed));
+        let rules = json!({"w": s.board_w, "h": s.board_h, "modes": s.modes, "fruit_count": s.fruit_count, "fruit": s.fruit,
+                           "tick_ms": speed_ms(s.speed),
+                           "accel": if s.accelerate { crate::settings::ACCEL_MS } else { 0.0 }});
         self.play = Some(PlayState { run: None, game, acc: 0.0, paused: false, over_at: None, reported: false,
-                                     new_best: false, result: None, origin: Screen::Setup, pb_before: None, replay: None });
+                                     new_best: false, result: None, origin: Screen::Setup, pb_before: None, replay: None,
+                                     round: Some((seed, rules, Vec::new())) });
         self.fx = Effects::default();
         self.go(Screen::Play);
     }
@@ -710,7 +723,7 @@ impl App {
         let run = Run::new(cat, seed);
         let game = run.game.clone();
         self.play = Some(PlayState { run: Some(run), game, acc: 0.0, paused: false, over_at: None, reported: false,
-                                     new_best: false, result: None, origin, pb_before: pb, replay: None });
+                                     new_best: false, result: None, origin, pb_before: pb, replay: None, round: None });
         self.fx = Effects::default();
         self.go(Screen::Play);
     }
@@ -754,7 +767,7 @@ impl App {
                               inputs, next: 0, data: d.clone() };
         self.play = Some(PlayState { run: Some(r), game, acc: 0.0, paused: false, over_at: None, reported: false,
                                      new_best: false, result: None, origin: Screen::Speedrun, pb_before: None,
-                                     replay: Some(replay) });
+                                     replay: Some(replay), round: None });
         self.fx = Effects::default();
         self.go(Screen::Play);
         self.screen = Screen::Play;
@@ -788,7 +801,12 @@ impl App {
                 let before: usize = p.game().snakes.iter().map(|s| s.queue.len()).sum();
                 match &mut p.run {
                     Some(r) => r.input(d),
-                    None => p.game.input(d),
+                    None => {
+                        if let Some((_seed, _st, inputs)) = p.round.as_mut() {
+                            inputs.push((p.game.tick, d));
+                        }
+                        p.game.input(d)
+                    }
                 }
                 let after: usize = p.game().snakes.iter().map(|s| s.queue.len()).sum();
                 if after > before {
@@ -980,7 +998,12 @@ impl App {
                     self.settings.save();
                 }
                 if logged_in {
-                    self.online.post("/api/rounds", json!({"fruit": score}), Req::Round);
+                    // (the server replays the round to count the fruit itself)
+                    let round = p.round.as_ref().map(|(seed, rules, inputs)| json!({
+                        "seed": seed, "settings": rules,
+                        "inputs": inputs.iter().map(|(t, d)| json!([t, d.name()])).collect::<Vec<_>>(),
+                    }));
+                    self.online.post("/api/rounds", json!({"fruit": score, "round": round}), Req::Round);
                 }
             }
         }

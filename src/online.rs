@@ -469,6 +469,8 @@ impl Online {
                     let earned = d["earned"].as_i64().unwrap_or(0);
                     if earned > 0 {
                         self.say(format!("+{} snake points", crate::cosmetics::format_points(earned)), Tone::Good);
+                    } else if let Some(msg) = d["message"].as_str() {
+                        self.say(msg.to_string(), Tone::Bad);
                     }
                     self.daily = None;
                 }
