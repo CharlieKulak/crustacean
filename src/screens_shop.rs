@@ -465,7 +465,9 @@ impl App {
             return;
         };
         let mut items: Vec<String> = me["inventory"].as_array().map(|a| a.iter().filter_map(|x| x.as_str().map(String::from)).collect()).unwrap_or_default();
-        items.sort_by_key(|i| (std::cmp::Reverse(cat.rarity_index(&cat.item_rarity(i))), cat.item_name(i)));
+        // (the dunce cap skin always comes first; then the rarest down)
+        let dunce = |i: &str| i.strip_prefix("skin:").and_then(|k| cat.skin(k)).is_some_and(|s| s.pattern == "dunce");
+        items.sort_by_key(|i| (!dunce(i), std::cmp::Reverse(cat.rarity_index(&cat.item_rarity(i))), cat.item_name(i)));
         if items.is_empty() {
             if self.empty_state(body, "box", "Nothing yet", "Buy skins in the Shop or open loot boxes.", Some("Go to the Shop")) {
                 self.set_tab(Screen::Store, 0);
@@ -477,7 +479,9 @@ impl App {
         let (cols, cw, gap, total) = self.grid(body, items.len() + 1, 200.0, card_h);
         let off = self.ui.begin_scroll("collection", body, total);
         // the plain snake comes first, so you can take a skin off
-        let all = std::iter::once(String::new()).chain(items.iter().cloned()).collect::<Vec<_>>();
+        let firsts = items.iter().take_while(|i| dunce(i)).count();
+        let all = items[..firsts].iter().cloned().chain(std::iter::once(String::new())).chain(items[firsts..].iter().cloned())
+            .collect::<Vec<_>>();
         for (i, item) in all.iter().enumerate() {
             let r = Rect::new(body.x + (i % cols) as f32 * (cw + gap), body.y + (i / cols) as f32 * (card_h * u + gap) - off, cw, card_h * u);
             if !self.ui.visible(r) {

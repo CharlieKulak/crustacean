@@ -763,10 +763,8 @@ impl App {
         let shake_you = self.duel_fx.shake[0];
         let mt = self.online.game.as_ref().unwrap();
         let du = self.online.duel.as_ref().unwrap();
-        // (online, your own board is drawn a move ahead: where the server has it by now)
-        let mine_ahead = if battle { crate::online::ahead_view(&mt.game, 0) } else { mt.game.clone() };
         for side in 0..n {
-            let g: &Game = if side == you { &mine_ahead } else { &du.boards[side] };
+            let g: &Game = if side == you { &mt.game } else { &du.boards[side] };
             let st = &sides[side];
             let shown;
             let game = if st["fog"].as_i64().unwrap_or(0) > 0 {
@@ -777,7 +775,10 @@ impl App {
             } else {
                 g
             };
-            let skin = if side == you { my_skin.clone() } else if battle { crate::cosmetics::team_skin(1, side) } else { boss_skin.clone() };
+            // (in a battle, everyone in the skin they have on)
+            let theirs = players.get(side).and_then(|p| p["skin"].as_str()).filter(|id| !id.is_empty()).and_then(|id| cat.skin(id)).cloned();
+            let skin = if side == you { my_skin.clone() } else if battle { theirs.unwrap_or_else(|| crate::cosmetics::team_skin(1, side)) }
+                       else { boss_skin.clone() };
             let skins = [skin];
             let view = View { game, t: if side == you { t } else { 1.0f32.min(t) }, skins: &skins, colors: colors.clone(), now_ms: now,
                               reveal: g.over, names: false, you: Some(0) };

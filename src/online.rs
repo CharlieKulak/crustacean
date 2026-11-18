@@ -113,6 +113,8 @@ pub struct Match {
     pub pending: Vec<(Dir, f64, i64)>,
     /// Time since the latest state arrived (for drawing in between).
     pub acc: f64,
+    /// The skin each snake's player has on ("" for none: a bot, or no skin).
+    pub skins: Vec<String>,
 }
 
 /// A story-mode boss duel. Your board is the `Match` in `Online::game` (so turns, lag
@@ -902,7 +904,7 @@ impl Online {
                 }
                 let players = if battle { m["players"].as_array().cloned().unwrap_or_default() } else { Vec::new() };
                 self.game = Some(Match { game: mine, you: 0, tick_ms: m["tick_ms"].as_f64().unwrap_or(130.0), countdown: Some(3),
-                                         result: None, reward: None, pending: Vec::new(), acc: 0.0 });
+                                         result: None, reward: None, pending: Vec::new(), acc: 0.0, skins: Vec::new() });
                 self.duel = Some(DuelInfo { boss: if battle { 0 } else { m["boss"].as_u64().unwrap_or(1) as usize }, you, boards,
                                             players, sides: Value::Array(sides), next_signature: 0, sudden: false,
                                             events: Vec::new(), result: None });
@@ -969,6 +971,8 @@ impl Online {
                     reward: None,
                     pending: Vec::new(),
                     acc: 0.0,
+                    skins: m["skins"].as_array().map(|a| a.iter().map(|x| x.as_str().unwrap_or("").to_string()).collect())
+                        .unwrap_or_default(),
                 });
                 self.notices.push(Notice::MatchStarted);
             }
@@ -1100,36 +1104,6 @@ impl Online {
         self.send(json!({"t": "input", "d": d.name(), "step": step}));
         true
     }
-}
-
-/// What to draw for an online board: your own snake one move further on, the way it's going.
-/// The server's newest state is already a move old by the time it's drawn (and the drawing
-/// goes from the move before to it), so this shows your snake about where the server has it.
-pub fn ahead_view(g: &Game, you: usize) -> Game {
-    let mut v = g.clone();
-    let Some(s) = g.snakes.get(you) else { return v };
-    if s.dead || g.over || !g.started || s.body.is_empty() {
-        return v;
-    }
-    let d = s.planned.unwrap_or(s.dir);
-    let (dx, dy) = d.delta();
-    let (mut x, mut y) = (s.body[0].x + dx, s.body[0].y + dy);
-    if g.has("borderless") {
-        x = x.rem_euclid(g.w);
-        y = y.rem_euclid(g.h);
-    } else if !g.in_bounds(x, y) {
-        return v; // (about to hit the edge: the server will say)
-    }
-    let mut body = s.body.clone();
-    body.insert(0, crate::game::Seg { x, y, hole: false });
-    body.pop();
-    if v.prev.len() > you {
-        v.prev[you] = s.body.iter().map(|p| (p.x, p.y)).collect();
-    }
-    v.snakes[you].body = body;
-    v.snakes[you].dir = d;
-    v.snakes[you].planned = None;
-    v
 }
 
 /// A duel side's state onto a board: the usual state, plus its arrow tiles.

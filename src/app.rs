@@ -690,7 +690,8 @@ impl App {
                         let mine = duel.sides[0].game.clone();
                         let theirs = duel.sides[1].game.clone();
                         self.online.game = Some(crate::online::Match { game: mine, you: 0, tick_ms: duel.tick_ms(), countdown: Some(3),
-                                                                       result: None, reward: None, pending: Vec::new(), acc: 0.0 });
+                                                                       result: None, reward: None, pending: Vec::new(), acc: 0.0,
+                                                                       skins: Vec::new() });
                         self.online.duel = Some(crate::online::DuelInfo { boss: num, you: 0, boards: vec![duel.sides[0].game.clone(), theirs],
                                                                           players: Vec::new(), sides: Value::Array(vec![duel.side_extras(0), duel.side_extras(1)]),
                                                                           next_signature: duel.next_signature, sudden: false, events: Vec::new(),
@@ -1406,9 +1407,7 @@ impl App {
             self.go(if self.online.room.is_some() { Screen::Lobby } else { Screen::Online });
             return;
         };
-        // (your own snake is drawn a move ahead: where the server has it by now)
-        let ahead = crate::online::ahead_view(&mt.game, mt.you);
-        let g = &ahead;
+        let g = &mt.game;
         let t = if g.over { 1.0 } else { (mt.acc / mt.tick_ms) as f32 };
         let hud_h = 64.0 * u;
         let area = Rect::new(16.0 * u, hud_h + 12.0 * u, w - 32.0 * u, h - hud_h - 28.0 * u);
@@ -1424,6 +1423,10 @@ impl App {
                 }
                 let k = count[(s.team.clamp(0, 1)) as usize];
                 count[(s.team.clamp(0, 1)) as usize] += 1;
+                // (the skin they have on, so everyone sees everyone's; else their team's colours)
+                if let Some(sk) = mt.skins.get(i).filter(|id| !id.is_empty()).and_then(|id| catalog().skin(id)) {
+                    return sk.clone();
+                }
                 team_skin(if s.team == my_team { 0 } else { 1 }, k + if s.team == my_team { 1 } else { 0 })
             })
             .collect();
