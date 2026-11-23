@@ -10,11 +10,44 @@
         canvas { display: block; width: 100vw; height: 100vh; outline: none; touch-action: none; }
         #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
                    color: #92a2b6; font: 600 18px system-ui, sans-serif; pointer-events: none; }
+        #oops { position: fixed; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center;
+                gap: 14px; padding: 16px; background: #090e15; color: #d6dee8; font: 500 16px system-ui, sans-serif; text-align: center; }
+        #oops b { font-size: 22px; }
+        #oops code { max-width: 90vw; max-height: 30vh; overflow: auto; white-space: pre-wrap; color: #92a2b6; font-size: 12px; }
+        #oops button { font: 700 16px system-ui, sans-serif; padding: 10px 26px; border: 0; border-radius: 10px;
+                       background: #2fbf63; color: #062010; cursor: pointer; }
     </style>
 </head>
 <body>
     <div id="loading">Loading Crustacean...</div>
     <canvas id="glcanvas" tabindex="1"></canvas>
+    <div id="oops"><b>Crustacean stopped</b><span id="oops-why"></span><code id="oops-detail"></code>
+        <button onclick="location.reload()">Reload</button></div>
+    <script>
+        // Rather than a black screen, say what went wrong (and keep it in the console).
+        let stopped = false;
+        function oops(why, detail) {
+            if (stopped) return;
+            stopped = true;
+            const l = document.getElementById("loading");
+            if (l) l.remove();
+            document.getElementById("oops-why").textContent = why;
+            document.getElementById("oops-detail").textContent = detail || "";
+            document.getElementById("oops").style.display = "flex";
+        }
+        window.addEventListener("error", e => oops("Something went wrong in the game.", String(e.message || e.error || e)));
+        window.addEventListener("unhandledrejection", e => oops("The game couldn't load.", String(e.reason)));
+        const consoleError = console.error;
+        console.error = function (...args) {
+            consoleError.apply(console, args);
+            const text = args.join(" ");
+            if (text.includes("panicked")) oops("Something went wrong in the game.", text);
+        };
+        document.getElementById("glcanvas").addEventListener("webglcontextlost", e => {
+            e.preventDefault();
+            oops("The graphics stopped working (this computer's GPU reset or ran out of memory).", "");
+        });
+    </script>
     <script src="mq_js_bundle.js?v=__HASH__"></script>
     <script src="crustacean-net.js?v=__HASH__"></script>
     <script>
@@ -22,6 +55,7 @@
         // (hide the message once the game draws its first frame)
         const hide = () => document.getElementById("loading").remove();
         setTimeout(function check() { document.getElementById("glcanvas").width > 300 ? hide() : setTimeout(check, 100); }, 300);
+        setTimeout(() => { if (document.getElementById("loading")) oops("The game is taking too long to start.", "Check the connection and reload."); }, 45000);
     </script>
 </body>
 </html>

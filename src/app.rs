@@ -181,8 +181,6 @@ pub struct Draft {
 
 impl App {
     pub async fn new() -> App {
-        let regular = load_ttf_font_from_bytes(include_bytes!("../assets/fonts/Nunito-SemiBold.ttf")).unwrap();
-        let bold = load_ttf_font_from_bytes(include_bytes!("../assets/fonts/Nunito-ExtraBold.ttf")).unwrap();
         let mut settings = Settings::load();
         // On the web, the game talks to the site it was loaded from.
         if let Some(origin) = crate::net::page_origin() {
@@ -208,7 +206,7 @@ impl App {
             Some((p.next()?.to_string(), p.next()?.to_string(), 0))
         });
         let mut app = App {
-            ui: Ui::new(regular, bold),
+            ui: Ui::new(),
             settings,
             online,
             sfx,

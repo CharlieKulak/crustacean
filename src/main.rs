@@ -34,10 +34,22 @@ async fn main() {
         default_hook(info);
     }));
     let mut app = App::new().await;
-    if app.settings.fullscreen {
+    // A browser only goes full screen right after a click or a key press (asking before
+    // one is refused, and on Chromebooks flickers): there, wait for the first one.
+    let mut want_fullscreen = app.settings.fullscreen;
+    if want_fullscreen && !cfg!(target_arch = "wasm32") {
         set_fullscreen(true);
+        want_fullscreen = false;
     }
     loop {
+        if want_fullscreen
+            && (is_mouse_button_pressed(MouseButton::Left) || get_last_key_pressed().is_some() || !touches().is_empty())
+        {
+            want_fullscreen = false;
+            if app.settings.fullscreen {
+                set_fullscreen(true);
+            }
+        }
         app.frame();
         if app.quit {
             break;

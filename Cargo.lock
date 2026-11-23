@@ -192,7 +192,7 @@ dependencies = [
 
 [[package]]
 name = "crustacean"
-version = "3.3.1"
+version = "3.3.2"
 dependencies = [
  "directories",
  "indexmap",
@@ -653,8 +653,6 @@ checksum = "5d15f86d12da44cd8d4ec3c73984537eb7f4cadcb9776a575a0a8a05ca11005c"
 [[package]]
 name = "macroquad"
 version = "0.4.16"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1cbd54d99d4d3ac59deed7ee4927bbbf4eb33a55635530af3be9395a55746090"
 dependencies = [
  "fontdue",
  "glam",

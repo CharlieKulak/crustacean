@@ -91,8 +91,8 @@ pub struct Toast {
 }
 
 pub struct Ui {
-    pub regular: Font,
-    pub bold: Font,
+    /// the fonts, one per size drawn (and bold or not): see TEXT_SIZES
+    fonts: std::cell::RefCell<HashMap<(u16, bool), Font>>,
     pub u: f32,
     pub w: f32,
     pub h: f32,
@@ -114,18 +114,17 @@ pub struct Ui {
     pub toasts: Vec<Toast>,
     pub hand: bool,
     pub caret_at: f64,
-    warmed_u: f32,
+    /// the screen's DPI scale the fonts were last warmed for
+    warmed_dpi: f32,
     /// number boxes being typed in, and when their +/- buttons were pressed
     edits: HashMap<u64, String>,
     held: HashMap<u64, f64>,
 }
 
 impl Ui {
-    pub fn new(regular: Font, bold: Font) -> Ui {
-        warm_fonts(&[&regular, &bold], 1.0);
+    pub fn new() -> Ui {
         Ui {
-            regular,
-            bold,
+            fonts: Default::default(),
             u: 1.0,
             w: 1280.0,
             h: 720.0,
@@ -146,7 +145,7 @@ impl Ui {
             toasts: Vec::new(),
             hand: false,
             caret_at: 0.0,
-            warmed_u: 1.0,
+            warmed_dpi: screen_dpi_scale(),
             edits: HashMap::new(),
             held: HashMap::new(),
         }
@@ -157,10 +156,10 @@ impl Ui {
         self.w = screen_width();
         self.h = screen_height();
         self.u = (self.w / 1280.0).min(self.h / 720.0).max(0.45);
-        if (self.u - self.warmed_u).abs() > 0.001 {
-            // (new text sizes after a resize: cache them before anything is drawn)
-            warm_fonts(&[&self.regular, &self.bold], self.u);
-            self.warmed_u = self.u;
+        if (screen_dpi_scale() - self.warmed_dpi).abs() > 0.001 {
+            // (moved to a screen with another DPI: start the fonts afresh at its sizes)
+            self.fonts.borrow_mut().clear();
+            self.warmed_dpi = screen_dpi_scale();
         }
         let (mx, my) = mouse_position();
         self.mouse = vec2(mx, my);
@@ -234,27 +233,37 @@ impl Ui {
 
     // ---- text
 
-    pub fn font(&self, bold: bool) -> &Font {
-        if bold { &self.bold } else { &self.regular }
+    /// The font to draw text of this (raster) size with, loaded the first time it's needed.
+    fn font(&self, px: u16, bold: bool) -> Font {
+        self.fonts
+            .borrow_mut()
+            .entry((px, bold))
+            .or_insert_with(|| {
+                let bytes: &[u8] = if bold { include_bytes!("../assets/fonts/Nunito-ExtraBold.ttf") } else { include_bytes!("../assets/fonts/Nunito-SemiBold.ttf") };
+                let font = load_ttf_font_from_bytes(bytes).unwrap();
+                warm_font(&font, px);
+                font
+            })
+            .clone()
     }
 
     pub fn measure(&self, s: &str, size: f32, bold: bool) -> f32 {
-        let px = (size * self.u).round().max(6.0) as u16;
-        measure_text(s, Some(self.font(bold)), px, 1.0).width
+        let (px, scale) = raster_size(size * self.u);
+        measure_text(s, Some(&self.font(px, bold)), px, scale).width
     }
 
     /// Draws text with its vertical middle at `y`. Sizes are in units; returns the width in pixels.
     pub fn text(&self, s: &str, x: f32, y: f32, size: f32, color: Color, align: Align, bold: bool) -> f32 {
-        let px = (size * self.u).round().max(6.0) as u16;
-        let font = self.font(bold);
-        let dims = measure_text(s, Some(font), px, 1.0);
+        let (px, scale) = raster_size(size * self.u);
+        let font = &self.font(px, bold);
+        let dims = measure_text(s, Some(font), px, scale);
         let x = match align {
             Align::Left => x,
             Align::Center => x - dims.width / 2.0,
             Align::Right => x - dims.width,
         };
-        let base = y + px as f32 * 0.36;
-        draw_text_ex(s, x.round(), base.round(), TextParams { font: Some(font), font_size: px, color, ..Default::default() });
+        let base = y + (size * self.u).max(6.0).round() * 0.36;
+        draw_text_ex(s, x.round(), base.round(), TextParams { font: Some(font), font_size: px, font_scale: scale, color, ..Default::default() });
         dims.width
     }
 
@@ -756,29 +765,44 @@ impl Ui {
     }
 }
 
-/// Put every glyph the UI uses into the fonts' texture atlases up front.
+/// The sizes (in logical pixels, about 9% apart) text is rasterised at; anything
+/// in between is drawn from the nearest one, scaled a little. Each has its own font,
+/// so its own texture atlas.
+///
+/// macroquad keeps every glyph a font has drawn in one atlas, packed in rows as tall
+/// as their tallest glyph, and doubles it (repacking in no particular order) when it
+/// fills. One atlas per font, drawn at whatever size the window called for, mixed
+/// small glyphs into tall rows and grew with every resize: up to 8192x8192 textures
+/// (256 MB) that weaker GPUs, like Chromebooks', can't make, and the game went black.
+const TEXT_SIZES: [u16; 30] = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 31, 34, 37, 41, 45, 50, 55, 60, 66, 72, 80, 88, 96];
+/// The biggest glyphs rasterised, in screen pixels: bigger text is these, scaled up.
+const MAX_RASTER_PX: f32 = 96.0;
+
+/// The font size to draw text `want` logical pixels tall at, and the scale to draw it with.
+pub fn raster_size(want: f32) -> (u16, f32) {
+    let want = want.max(6.0);
+    let dpi = screen_dpi_scale();
+    let best = TEXT_SIZES
+        .iter()
+        .copied()
+        .enumerate()
+        .filter(|&(i, l)| i == 0 || (l as f32 * dpi).ceil() <= MAX_RASTER_PX)
+        .map(|(_, l)| l)
+        .min_by(|a, b| (want / *a as f32).ln().abs().total_cmp(&(want / *b as f32).ln().abs()))
+        .unwrap();
+    (best, want / best as f32)
+}
+
+/// Put every glyph the UI uses into a font's texture atlas up front, at the one
+/// size it's drawn at.
 ///
 /// macroquad moves glyphs around when an atlas fills up and has to grow, which
 /// scrambles text drawn earlier in that frame (and, it turns out, later frames
-/// too). Caching everything at start-up means it grows before anything is drawn.
-pub fn warm_fonts(fonts: &[&Font], u: f32) {
+/// too). Caching everything first means it grows before anything is drawn.
+fn warm_font(font: &Font, px: u16) {
     let chars: Vec<char> = (32u8..127).map(|c| c as char).chain("•·–—…×✓".chars()).collect();
-    let mut sizes: Vec<u16> = Vec::new();
-    for s in [9.5f32, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 19.0, 20.0, 22.0, 24.0, 26.0, 28.0, 30.0, 34.0, 36.0, 40.0] {
-        let px = ((s * u).round().max(6.0) * screen_dpi_scale()).ceil() as u16;
-        if !sizes.contains(&px) {
-            sizes.push(px);
-        }
-    }
-    let t0 = get_time();
-    for f in fonts {
-        for &px in &sizes {
-            f.populate_font_cache(&chars, px);
-        }
-    }
-    if std::env::var("CRUSTACEAN_DEBUG").is_ok() {
-        eprintln!("warmed fonts in {:.0} ms", (get_time() - t0) * 1000.0);
-    }
+    // (in screen pixels, as draw_text_ex asks for them)
+    font.populate_font_cache(&chars, (px as f32 * screen_dpi_scale()).ceil() as u16);
 }
 
 fn intersect(a: Rect, b: Rect) -> Rect {

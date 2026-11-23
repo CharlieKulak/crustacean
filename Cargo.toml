@@ -1,6 +1,6 @@
 [package]
 name = "crustacean"
-version = "3.3.1"
+version = "3.3.2"
 edition = "2024"
 description = "Crustacean: a snake game in Rust, and a client for OpenSnake servers"
 license = "GPL-3.0-or-later"
@@ -36,3 +36,7 @@ strip = true
 
 [profile.dev.package."*"]
 opt-level = 2
+
+# macroquad with its font atlas fixed (see vendor/macroquad/README.crustacean.md)
+[patch.crates-io]
+macroquad = { path = "vendor/macroquad" }

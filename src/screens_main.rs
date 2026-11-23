@@ -782,9 +782,9 @@ impl App {
         let help = Rect::new(x, card.y + card.h + 16.0 * u, w, 120.0 * u);
         self.ui.card(help);
         self.ui.text("Controls", help.x + 24.0 * u, help.y + 28.0 * u, 18.0, INK, Align::Left, true);
-        self.ui.text("Arrow keys or WASD to steer (swipe on touch screens)  ·  P or Space to pause  ·  R to restart  ·  Esc to quit",
+        self.ui.text("Arrow keys or WASD to steer (swipe on touch screens)  ·  P or Space to pause",
                      help.x + 24.0 * u, help.y + 60.0 * u, 14.0, MUTED, Align::Left, false);
-        self.ui.text("Esc goes back  ·  1 2 3 switch tabs", help.x + 24.0 * u, help.y + 86.0 * u, 14.0, MUTED, Align::Left, false);
+        self.ui.text("R to restart  ·  Esc to quit a game, or go back  ·  1 2 3 switch tabs", help.x + 24.0 * u, help.y + 86.0 * u, 14.0, MUTED, Align::Left, false);
     }
 }
 
