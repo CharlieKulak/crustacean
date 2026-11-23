@@ -6,7 +6,7 @@ cargo build --release --target wasm32-unknown-unknown
 OUT=web/dist
 rm -rf "$OUT" && mkdir -p "$OUT"
 cp target/wasm32-unknown-unknown/release/crustacean.wasm "$OUT/"
-JS=$(find "${CARGO_HOME:-$HOME/.cargo}/registry/src" -path "*macroquad-0.4.16/js/mq_js_bundle.js" | head -1)
+JS=vendor/macroquad/js/mq_js_bundle.js  # (macroquad's own loader, from the vendored copy)
 # (macroquad's bundle has a strict-mode slip in its unused quad_net plugin; declare the variable)
 # and an opaque canvas, so see-through UI never lets the page show through
 sed -e 's/function i(){}register_plugin=function(e){e.env.ws_connect/function i(){}var register_plugin;register_plugin=function(e){e.env.ws_connect/' \
